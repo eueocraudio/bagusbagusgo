@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== BagusBagusGo — instalação ==="
+echo "=== BagusBagusGo v2.0.2 — instalação ==="
 
 # Verifica python3
 if ! command -v python3 &>/dev/null; then
@@ -32,11 +32,18 @@ else
     echo "  ✓ uBlock Origin: $(python3 -c "import json; m=json.load(open('$EXTENSIONS_DIR/uBlock0.chromium/manifest.json')); print(m['version'])")"
 fi
 
+# Cria .env a partir do exemplo se ainda não existir
+SCRIPT_DIR="$(dirname "$0")"
+if [ ! -f "$SCRIPT_DIR/.env" ] && [ -f "$SCRIPT_DIR/.env.example" ]; then
+    cp "$SCRIPT_DIR/.env.example" "$SCRIPT_DIR/.env"
+    echo "  ✓ .env criado a partir de .env.example"
+fi
+
 # Cria diretório de dados padrão
 mkdir -p "$HOME/Downloads"
 
 # Torna o script executável (idempotente)
-chmod +x "$(dirname "$0")/install.sh"
+chmod +x "$SCRIPT_DIR/install.sh"
 
 echo ""
 echo "Instalação concluída."

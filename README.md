@@ -1,6 +1,6 @@
 # BagusBagusGo (BBGo)
 
-**Versão: 2.0.1**  
+**Versão: 2.0.2**  
 Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
 Motor de busca padrão: **DuckDuckGo** · Tema: **Dark + Vermelho**.
 
@@ -43,7 +43,7 @@ python3 run.py /caminho/do/diretorio
 
 O caminho do diretório de dados é impresso no terminal:
 ```
-[BBGo v2.0.1] diretório de dados: /tmp/bagusbagusgo_abc123
+[BBGo v2.0.2] diretório de dados: /tmp/bagusbagusgo_abc123
 ```
 
 ---
@@ -143,7 +143,7 @@ Páginas web também em dark mode via `QWebEngineSettings.ForceDarkMode`.
 A cada inicialização, um User Agent é sorteado de `data/user_agents.txt`:
 
 ```
-[BBGo v2.0.1] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
+[BBGo v2.0.2] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
 ```
 
 O `navigator.*`, `plugins`, `mimeTypes` e `window.chrome` são spoofados para mascarar o QtWebEngine.

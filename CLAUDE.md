@@ -2,7 +2,7 @@
 
 ## Versão atual
 
-**v2.0.1** — constantes em `src/constants.py` (`APP_NAME`, `APP_VERSION`, `APP_ID`).
+**v2.0.2** — constantes em `src/constants.py` (`APP_NAME`, `APP_VERSION`, `APP_ID`).
 
 ## Visão geral
 
@@ -82,7 +82,7 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 ## Layout da janela
 
 ```
-MainWindow  (título: "BagusBagusGo v2.0.1")
+MainWindow  (título: "BagusBagusGo v2.0.2")
 └── outer QTabWidget (5 abas)
     ├── [1] BagusBagusGo  ← browser completo
     │    ├── nav_bar (QWidget + QHBoxLayout)

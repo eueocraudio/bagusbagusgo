@@ -9,7 +9,11 @@ def random_user_agent() -> str:
         _UA_FILE.parent.mkdir(parents=True, exist_ok=True);
         _UA_FILE.write_text("");
         return "";
-    agents = [line.strip() for line in _UA_FILE.read_text().splitlines() if line.strip()];
+    _MOBILE = ("Mobile", "Android", "iPhone", "iPad");
+    agents = [
+        line.strip() for line in _UA_FILE.read_text().splitlines()
+        if line.strip() and not any(m in line for m in _MOBILE)
+    ];
     return random.choice(agents) if agents else "";
 
 

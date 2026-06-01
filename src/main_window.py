@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QStatusBar, QProgressBar, QSizePolicy,
     QToolButton, QMenu, QMessageBox, QScrollArea,
 );
-from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineDownloadRequest, QWebEngineScript, QWebEngineSettings;
+from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineDownloadRequest, QWebEngineScript, QWebEngineSettings, QWebEnginePage;
 from PySide6.QtWebChannel import QWebChannel;
 from PySide6.QtCore import QUrl, Qt;
 from PySide6.QtGui import QKeySequence, QShortcut;
@@ -33,6 +33,12 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(1024, 700);
         self._downloads_dir = base_dir / "downloads";
         self._downloads_dir.mkdir(parents=True, exist_ok=True);
+        self._profile = QWebEngineProfile("bbgo", self);
+        self._profile.setPersistentStoragePath(str(base_dir / "storage"));
+        self._profile.setCachePath(str(base_dir / "cache"));
+        self._profile.setPersistentCookiesPolicy(
+            QWebEngineProfile.PersistentCookiesPolicy.AllowPersistentCookies
+        );
         self.bookmarks = BookmarkManager(base_dir);
         self.history = HistoryManager(base_dir);
         self.session = SessionManager(base_dir);
@@ -56,10 +62,17 @@ class MainWindow(QMainWindow):
             if isinstance(self.tabs.widget(i), BrowserTab)
         ];
         self.session.save(urls);
+        # deleta as páginas antes do perfil para evitar "WebEnginePage still not deleted"
+        for i in range(self.tabs.count()):
+            view = self.tabs.widget(i);
+            if isinstance(view, BrowserTab):
+                view.setPage(None);
+                view.deleteLater();
+        self.tabs.clear();
         event.accept();
 
     def _connect_downloads(self):
-        profile = QWebEngineProfile.defaultProfile();
+        profile = self._profile;
         load_extensions(profile);
         profile.settings().setAttribute(QWebEngineSettings.WebAttribute.ForceDarkMode, True);
         ua = random_user_agent();
@@ -277,7 +290,7 @@ class MainWindow(QMainWindow):
         );
 
     def add_tab(self, url: QUrl = None) -> BrowserTab:
-        view = BrowserTab(self.add_tab, self.tabs);
+        view = BrowserTab(self.add_tab, self._profile, self.tabs);
         capture = ClickCapture(view);
         channel = QWebChannel(view.page());
         channel.registerObject("capture", capture);
