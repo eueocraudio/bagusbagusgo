@@ -1,4 +1,4 @@
-# WebCráudio — instruções para o Claude
+# BagusBagusGo — instruções para o Claude
 
 ## Visão geral
 
@@ -32,8 +32,8 @@ install.sh                — instala dependências via pip3
 
 | Arquivo | Conteúdo |
 |---|---|
-| `~/.config/webcraudiobot/bookmarks.json` | Favoritos |
-| `~/.config/webcraudiobot/history.json`   | Histórico de navegação |
+| `~/.config/bagusbagusgo/bookmarks.json` | Favoritos |
+| `~/.config/bagusbagusgo/history.json`   | Histórico de navegação |
 | `~/Downloads/`                            | Arquivos baixados |
 
 ## Arquitetura de `src/browser.py`

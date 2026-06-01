@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== WebCráudio — instalação ==="
+echo "=== BagusBagusGo — instalação ==="
 
 # Verifica python3
 if ! command -v python3 &>/dev/null; then
@@ -23,7 +23,7 @@ python3 -c "from PySide6.QtWebChannel import QWebChannel" \
     || { echo "Erro: QtWebChannel não disponível."; exit 1; }
 
 # Cria diretório de dados
-mkdir -p "$HOME/.config/webcraudiobot"
+mkdir -p "$HOME/.config/bagusbagusgo"
 mkdir -p "$HOME/Downloads"
 
 # Torna o script executável (idempotente)

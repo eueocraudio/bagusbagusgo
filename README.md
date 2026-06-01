@@ -1,4 +1,4 @@
-# WebCráudio
+# BagusBagusGo
 
 Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
 Motor de busca padrão: **DuckDuckGo**.
@@ -193,8 +193,8 @@ view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
 
 | Localização | Conteúdo |
 |---|---|
-| `~/.config/webcraudiobot/bookmarks.json` | Favoritos |
-| `~/.config/webcraudiobot/history.json` | Histórico (máx. 5000 entradas) |
+| `~/.config/bagusbagusgo/bookmarks.json` | Favoritos |
+| `~/.config/bagusbagusgo/history.json` | Histórico (máx. 5000 entradas) |
 | `~/Downloads/` | Arquivos baixados |
 
 ---

@@ -1,22 +1,23 @@
 import json;
-from .constants import BOOKMARKS_FILE;
+from pathlib import Path;
 
 
 class BookmarkManager:
-    def __init__(self):
-        BOOKMARKS_FILE.parent.mkdir(parents=True, exist_ok=True);
+    def __init__(self, data_dir: Path):
+        self._file = data_dir / "bookmarks.json";
+        data_dir.mkdir(parents=True, exist_ok=True);
         self._bookmarks: list[dict] = self._load();
 
     def _load(self) -> list[dict]:
-        if BOOKMARKS_FILE.exists():
+        if self._file.exists():
             try:
-                return json.loads(BOOKMARKS_FILE.read_text());
+                return json.loads(self._file.read_text());
             except Exception:
                 return [];
         return [];
 
     def _save(self):
-        BOOKMARKS_FILE.write_text(json.dumps(self._bookmarks, ensure_ascii=False, indent=2));
+        self._file.write_text(json.dumps(self._bookmarks, ensure_ascii=False, indent=2));
 
     def all(self) -> list[dict]:
         return list(self._bookmarks);

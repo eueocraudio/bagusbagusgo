@@ -1,23 +1,25 @@
 import json;
 from datetime import datetime;
-from .constants import HISTORY_FILE, HISTORY_MAX;
+from pathlib import Path;
+from .constants import HISTORY_MAX;
 
 
 class HistoryManager:
-    def __init__(self):
-        HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True);
+    def __init__(self, data_dir: Path):
+        self._file = data_dir / "history.json";
+        data_dir.mkdir(parents=True, exist_ok=True);
         self._entries: list[dict] = self._load();
 
     def _load(self) -> list[dict]:
-        if HISTORY_FILE.exists():
+        if self._file.exists():
             try:
-                return json.loads(HISTORY_FILE.read_text());
+                return json.loads(self._file.read_text());
             except Exception:
                 return [];
         return [];
 
     def _save(self):
-        HISTORY_FILE.write_text(json.dumps(self._entries, ensure_ascii=False, indent=2));
+        self._file.write_text(json.dumps(self._entries, ensure_ascii=False, indent=2));
 
     def record(self, title: str, url: str):
         if not url or url == "about:blank":

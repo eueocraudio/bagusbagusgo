@@ -1,14 +1,15 @@
+from pathlib import Path;
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLineEdit, QPushButton, QTabWidget, QToolBar,
     QStatusBar, QProgressBar, QSizePolicy,
+    QToolButton, QMenu, QMessageBox,
 );
 from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineDownloadRequest, QWebEngineScript;
 from PySide6.QtWebChannel import QWebChannel;
 from PySide6.QtCore import QUrl, Qt;
 from PySide6.QtGui import QKeySequence, QShortcut;
 
-from .constants import DOWNLOADS_DIR;
 from .bookmark_manager import BookmarkManager;
 from .bookmarks_dialog import ManageBookmarksDialog;
 from .history_manager import HistoryManager;
@@ -19,13 +20,14 @@ from .browser_tab import BrowserTab;
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, base_dir: Path):
         super().__init__();
-        self.setWindowTitle("WebCráudio");
+        self.setWindowTitle("BagusBagusGo");
         self.setMinimumSize(1024, 700);
-        self.bookmarks = BookmarkManager();
-        self.history = HistoryManager();
-        DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True);
+        self._downloads_dir = base_dir / "downloads";
+        self._downloads_dir.mkdir(parents=True, exist_ok=True);
+        self.bookmarks = BookmarkManager(base_dir);
+        self.history = HistoryManager(base_dir);
         self._build_ui();
         self._build_shortcuts();
         self._connect_downloads();
@@ -33,7 +35,7 @@ class MainWindow(QMainWindow):
 
     def _connect_downloads(self):
         profile = QWebEngineProfile.defaultProfile();
-        profile.setDownloadPath(str(DOWNLOADS_DIR));
+        profile.setDownloadPath(str(self._downloads_dir));
         profile.downloadRequested.connect(self._on_download_requested);
         qwc_script = QWebEngineScript();
         qwc_script.setName("qwebchannel_inject");
@@ -112,6 +114,17 @@ class MainWindow(QMainWindow):
         self.btn_new_tab.setFixedWidth(32);
         self.btn_new_tab.clicked.connect(lambda: self.add_tab());
         nav_toolbar.addWidget(self.btn_new_tab);
+
+        settings_menu = QMenu(self);
+        settings_menu.addAction("About", self._open_about);
+
+        self.btn_settings = QToolButton();
+        self.btn_settings.setText("⚙");
+        self.btn_settings.setFixedWidth(32);
+        self.btn_settings.setToolTip("Configurações");
+        self.btn_settings.setMenu(settings_menu);
+        self.btn_settings.setPopupMode(QToolButton.InstantPopup);
+        nav_toolbar.addWidget(self.btn_settings);
 
         self.bookmarks_toolbar = QToolBar("Favoritos");
         self.bookmarks_toolbar.setMovable(False);
@@ -263,6 +276,15 @@ class MainWindow(QMainWindow):
             self.download_panel.show();
             self.addDockWidget(Qt.BottomDockWidgetArea, self.download_panel);
 
+    def _open_about(self):
+        QMessageBox.about(
+            self,
+            "Sobre o BagusBagusGo",
+            "<h2>BagusBagusGo</h2>"
+            "<p>Browser desktop construído com <b>Python 3</b> e <b>PySide6</b> (QtWebEngine).</p>"
+            "<p>Motor de busca padrão: DuckDuckGo.</p>",
+        );
+
     def _on_tab_changed(self, index: int):
         view = self.tabs.widget(index);
         if view:
@@ -305,7 +327,7 @@ class MainWindow(QMainWindow):
             short = title[:20] + "…" if len(title) > 20 else title;
             self.tabs.setTabText(index, short or "Nova aba");
             if view is self._current_view():
-                self.setWindowTitle(f"{title} — WebCráudio");
+                self.setWindowTitle(f"{title} — BagusBagusGo");
 
     def _update_nav_buttons(self, view: BrowserTab):
         history = view.history();
