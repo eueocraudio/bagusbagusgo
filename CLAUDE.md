@@ -7,14 +7,25 @@ Browser desktop construído com Python 3 e PySide6 (QtWebEngine). Toda a lógica
 ## Como rodar
 
 ```bash
-python3 src/browser.py
+python3 run.py
 ```
 
 ## Estrutura
 
 ```
-src/browser.py   — código principal (única fonte de verdade)
-install.sh       — instala dependências via pip3
+run.py                    — entry point (executa src/browser.main)
+src/
+  browser.py              — main() e entry point do pacote
+  constants.py            — constantes globais (paths, limites)
+  bookmark_manager.py     — BookmarkManager (CRUD JSON)
+  bookmarks_dialog.py     — ManageBookmarksDialog
+  history_manager.py      — HistoryManager (registro e busca)
+  history_dialog.py       — HistoryDialog
+  download_panel.py       — DownloadItemWidget + DownloadPanel
+  click_capture.py        — ClickCapture + CLICK_LISTENER_JS
+  browser_tab.py          — BrowserTab (recebe add_tab como callback)
+  main_window.py          — MainWindow (orquestra tudo)
+install.sh                — instala dependências via pip3
 ```
 
 ## Dados persistidos pelo usuário
@@ -82,4 +93,5 @@ Ao adicionar nova regra, atualizar a tabela acima.
 - Não usar `QApplication.exec_()` (deprecated); usar `app.exec()`
 - Motor de busca padrão: DuckDuckGo (`https://duckduckgo.com/?q=`)
 - Página inicial e botão home: `https://duckduckgo.com`
-- Nunca usar `.parent().parent()` para navegar até `MainWindow`; usar `while not isinstance(p, MainWindow)`
+- `BrowserTab` recebe `add_tab` como callback no construtor — não importa `MainWindow` (evita import circular)
+- O comando de execução é `python3 run.py` (não `python3 src/browser.py`)

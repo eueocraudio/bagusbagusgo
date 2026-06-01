@@ -29,7 +29,7 @@ pip3 install --break-system-packages PySide6
 ## Iniciando o browser
 
 ```bash
-python3 src/browser.py
+python3 run.py
 ```
 
 ---
@@ -202,10 +202,20 @@ view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
 ## Estrutura do projeto
 
 ```
+run.py                    — entry point
 src/
-  browser.py    — código principal
-install.sh      — script de instalação
-CLAUDE.md       — instruções para o Claude Code
-README.md       — esta documentação
-.gitignore      — arquivos ignorados pelo git
+  browser.py              — main()
+  constants.py            — constantes globais
+  bookmark_manager.py     — gerenciamento de favoritos
+  bookmarks_dialog.py     — diálogo de favoritos
+  history_manager.py      — gerenciamento de histórico
+  history_dialog.py       — diálogo de histórico
+  download_panel.py       — painel de downloads
+  click_capture.py        — captura de cliques via QWebChannel
+  browser_tab.py          — aba do browser
+  main_window.py          — janela principal
+install.sh                — script de instalação
+CLAUDE.md                 — instruções para o Claude Code
+README.md                 — esta documentação
+.gitignore                — arquivos ignorados pelo git
 ```

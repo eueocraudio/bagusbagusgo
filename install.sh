@@ -31,4 +31,4 @@ chmod +x "$(dirname "$0")/install.sh"
 
 echo ""
 echo "Instalação concluída."
-echo "Para iniciar: python3 src/browser.py"
+echo "Para iniciar: python3 run.py"
