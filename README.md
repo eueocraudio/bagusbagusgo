@@ -81,8 +81,8 @@ Digite na barra de endereço e pressione **Enter**:
 1. Navegue até a página que deseja salvar
 2. Clique no botão `☆` na toolbar ou pressione **Ctrl+D**
 3. O botão muda para `★` — a página está salva
-4. A **barra de favoritos** aparece automaticamente abaixo da toolbar
-5. Clique em qualquer favorito da barra para navegar direto
+4. A **barra de favoritos** aparece automaticamente abaixo da toolbar de navegação
+5. Clique em qualquer favorito para navegar direto
 
 **Gerenciar favoritos** (`★≡`):
 - Renomear: selecione o item e clique em "Renomear" (ou duplo-clique)
@@ -119,7 +119,7 @@ Para abrir/fechar o painel manualmente: botão `⬇` na toolbar ou **Ctrl+J**.
 
 ### 7. Captura de cliques via Python
 
-O browser captura automaticamente o `id` e o `name` de todo elemento clicado e imprime no terminal onde foi iniciado:
+O browser captura automaticamente o `id` e o `name` de todo elemento clicado e imprime no terminal:
 
 ```
 [clique] tag=<a>,  id="logo"
@@ -157,7 +157,7 @@ view.page().runJavaScript(
     "if (el) { el.click(); }"
 );
 
-# Aguardar 3 segundos e clicar em um link
+# Aguardar N segundos e clicar em um link
 view.page().runJavaScript(
     "setTimeout(function() {"
     "  var link = document.querySelector('a');"
@@ -169,7 +169,7 @@ view.page().runJavaScript(
 view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
 ```
 
-> **Regra atual:** ao entrar em qualquer URL com `google.com`, o browser redireciona automaticamente para o DuckDuckGo.
+**Regra ativa:** ao entrar em qualquer URL com `google.com`, o browser redireciona automaticamente para o DuckDuckGo.
 
 ---
 

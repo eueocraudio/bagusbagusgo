@@ -484,8 +484,10 @@ class BrowserTab(QWebEngineView):
         super().__init__(parent);
 
     def createWindow(self, window_type):
-        new_tab = self.parent().parent().add_tab();
-        return new_tab;
+        p = self.parent();
+        while p and not isinstance(p, MainWindow):
+            p = p.parent();
+        return p.add_tab() if p else None;
 
 
 # ---------------------------------------------------------------------------
@@ -552,7 +554,14 @@ class MainWindow(QMainWindow):
         self.url_bar = QLineEdit();
         self.url_bar.setPlaceholderText("Digite um endereço ou pesquise...");
         self.url_bar.returnPressed.connect(self._navigate_to_url);
-        nav_toolbar.addWidget(self.url_bar);
+        url_container = QWidget();
+        url_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred);
+        url_container_layout = QHBoxLayout(url_container);
+        url_container_layout.setContentsMargins(0, 0, 0, 0);
+        url_container_layout.setStretch(0, 1);
+        self.url_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding);
+        url_container_layout.addWidget(self.url_bar, 1);
+        nav_toolbar.addWidget(url_container);
 
         self.btn_bookmark = QPushButton("☆");
         self.btn_bookmark.setFixedWidth(32);
@@ -591,8 +600,8 @@ class MainWindow(QMainWindow):
             "QPushButton { border: none; padding: 2px 6px; border-radius: 3px; }"
             "QPushButton:hover { background: #e0e0e0; }"
         );
-        self.addToolBar(Qt.TopToolBarArea, self.bookmarks_toolbar);
         self.addToolBarBreak(Qt.TopToolBarArea);
+        self.addToolBar(Qt.TopToolBarArea, self.bookmarks_toolbar);
         self._refresh_bookmarks_bar();
 
         # --- barra de progresso + abas ---

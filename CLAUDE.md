@@ -36,18 +36,18 @@ install.sh       — instala dependências via pip3
 | `ClickCapture` | `QObject` com `@Slot` que recebe cliques do JS via `QWebChannel` e imprime tag/id/name no terminal |
 | `DownloadItemWidget` | Widget de progresso por arquivo baixado |
 | `DownloadPanel` | `QDockWidget` inferior com lista de downloads |
-| `BrowserTab` | `QWebEngineView` com suporte a abertura de links em nova aba |
+| `BrowserTab` | `QWebEngineView`; `createWindow` sobe o chain de parents até `MainWindow` para abrir links em nova aba |
 | `MainWindow` | Janela principal: toolbars, abas, atalhos, orquestra tudo |
 
-## Funcionalidades implementadas
+## Layout das toolbars
 
-- Navegação com múltiplas abas (Ctrl+T / Ctrl+W)
-- Barra de endereço com busca automática no DuckDuckGo
-- Favoritos persistidos com barra de acesso rápido (Ctrl+D)
-- Histórico de navegação com busca e limpeza (Ctrl+H)
-- Downloads com painel de progresso, velocidade e abertura do arquivo (Ctrl+J)
-- Captura de cliques em tags HTML via `QWebChannel` → `print()` no Python
-- Injeção de JavaScript por URL no método `_on_load_finished`
+```
+Linha 1: nav_toolbar  (ocupa 100% da largura)
+          ← → ↻ ⌂ [URL bar — expansível] ☆ ★≡ 🕐 ⬇ +
+Linha 2: bookmarks_toolbar  (visível apenas quando há favoritos)
+```
+
+A `nav_toolbar` fica sozinha na linha 1 graças ao `addToolBarBreak` inserido **antes** da `bookmarks_toolbar`. A barra de URL usa um `QWidget` container com `QSizePolicy.Expanding` e `addWidget(..., stretch=1)` para preencher todo o espaço disponível.
 
 ## Injeção de JavaScript por URL
 
@@ -62,7 +62,16 @@ def _on_load_finished(self, view: BrowserTab):
 ```
 
 **Regras ativas no momento:**
-- `google.com` → redireciona para `https://duckduckgo.com` via `window.location.href`
+
+| Condição | Ação |
+|---|---|
+| `"google.com" in url` | Redireciona para `https://duckduckgo.com` via `window.location.href` |
+
+Ao adicionar nova regra, atualizar a tabela acima.
+
+## Captura de cliques
+
+`qwebchannel.js` é injetado em todas as páginas via `QWebEngineScript` no perfil (`DocumentCreation`, `MainWorld`). Após cada `loadFinished`, `_CLICK_LISTENER_JS` instala um `addEventListener('click')` que envia `tag`, `id` e `name` do elemento clicado ao Python via `QWebChannel` → `ClickCapture.elementClicked` → `print()`.
 
 ## Regras de desenvolvimento
 
@@ -73,4 +82,4 @@ def _on_load_finished(self, view: BrowserTab):
 - Não usar `QApplication.exec_()` (deprecated); usar `app.exec()`
 - Motor de busca padrão: DuckDuckGo (`https://duckduckgo.com/?q=`)
 - Página inicial e botão home: `https://duckduckgo.com`
-- Ao adicionar nova regra de JS por URL, documentar em "Regras ativas no momento" acima
+- Nunca usar `.parent().parent()` para navegar até `MainWindow`; usar `while not isinstance(p, MainWindow)`
