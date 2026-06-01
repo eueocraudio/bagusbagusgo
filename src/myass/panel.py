@@ -27,7 +27,7 @@ class MyAssPanel(QWidget):
 
     def _build_table(self) -> QTableWidget:
         self.table = QTableWidget(0, 4);
-        self.table.setHorizontalHeaderLabels(["Coluna 1", "Coluna 2", "Coluna 3", "Coluna 4"]);
+        self.table.setHorizontalHeaderLabels(["Work", "Flow", "Status", "Date"]);
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch);
         self.table.verticalHeader().setVisible(False);
         self.table.setEditTriggers(QTableWidget.NoEditTriggers);

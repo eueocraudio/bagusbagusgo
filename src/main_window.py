@@ -10,6 +10,7 @@ from PySide6.QtWebChannel import QWebChannel;
 from PySide6.QtCore import QUrl, Qt;
 from PySide6.QtGui import QKeySequence, QShortcut;
 
+from .constants import APP_NAME, APP_VERSION, APP_ID;
 from .bookmark_manager import BookmarkManager;
 from .bookmarks_dialog import ManageBookmarksDialog;
 from .history_manager import HistoryManager;
@@ -17,23 +18,43 @@ from .history_dialog import HistoryDialog;
 from .download_panel import DownloadPanel;
 from .click_capture import ClickCapture, CLICK_LISTENER_JS;
 from .browser_tab import BrowserTab;
-from .user_agent import random_user_agent;
+from .user_agent import random_user_agent, navigator_spoof_script;
+from .session_manager import SessionManager;
+from .request_interceptor import UserAgentInterceptor, YOUTUBE_SPOOF_JS;
 from .myass.panel import MyAssPanel;
 
 
 class MainWindow(QMainWindow):
     def __init__(self, base_dir: Path):
         super().__init__();
-        self.setWindowTitle("BagusBagusGo");
+        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}");
         self.setMinimumSize(1024, 700);
         self._downloads_dir = base_dir / "downloads";
         self._downloads_dir.mkdir(parents=True, exist_ok=True);
         self.bookmarks = BookmarkManager(base_dir);
         self.history = HistoryManager(base_dir);
+        self.session = SessionManager(base_dir);
         self._build_ui();
         self._build_shortcuts();
         self._connect_downloads();
-        self.add_tab(QUrl("https://duckduckgo.com"));
+        self._restore_session();
+
+    def _restore_session(self):
+        urls = self.session.load();
+        if urls:
+            for url in urls:
+                self.add_tab(QUrl(url));
+        else:
+            self.add_tab(QUrl("https://duckduckgo.com"));
+
+    def closeEvent(self, event):
+        urls = [
+            self.tabs.widget(i).url().toString()
+            for i in range(self.tabs.count())
+            if isinstance(self.tabs.widget(i), BrowserTab)
+        ];
+        self.session.save(urls);
+        event.accept();
 
     def _connect_downloads(self):
         profile = QWebEngineProfile.defaultProfile();
@@ -42,6 +63,43 @@ class MainWindow(QMainWindow):
         if ua:
             profile.setHttpUserAgent(ua);
             print(f"[bagusbagusgo] user-agent: {ua}");
+            spoof_script = QWebEngineScript();
+            spoof_script.setName("navigator_spoof");
+            spoof_script.setSourceCode(navigator_spoof_script(ua));
+            spoof_script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation);
+            spoof_script.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
+            profile.scripts().insert(spoof_script);
+        self._interceptor = UserAgentInterceptor();
+        profile.setUrlRequestInterceptor(self._interceptor);
+        yt_spoof = QWebEngineScript();
+        yt_spoof.setName("youtube_ua_spoof");
+        yt_spoof.setSourceCode(YOUTUBE_SPOOF_JS);
+        yt_spoof.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation);
+        yt_spoof.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
+        profile.scripts().insert(yt_spoof);
+        ad_skip = QWebEngineScript();
+        ad_skip.setName("youtube_ad_skipper");
+        ad_skip.setSourceCode("""
+(function() {
+    if (!window.location.hostname.includes('youtube.com')) return;
+    setInterval(function() {
+        var skip = document.querySelector(
+            '.ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern'
+        );
+        if (skip) { skip.click(); return; }
+        var overlay = document.querySelector('.ytp-ad-player-overlay, .ad-showing');
+        if (overlay) {
+            var video = document.querySelector('video');
+            if (video && video.duration && !isNaN(video.duration)) {
+                video.currentTime = video.duration;
+            }
+        }
+    }, 500);
+})();
+""");
+        ad_skip.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady);
+        ad_skip.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
+        profile.scripts().insert(ad_skip);
         profile.setDownloadPath(str(self._downloads_dir));
         profile.downloadRequested.connect(self._on_download_requested);
         qwc_script = QWebEngineScript();
@@ -231,6 +289,11 @@ class MainWindow(QMainWindow):
         return view;
 
     def close_tab(self, index: int):
+        view = self.tabs.widget(index);
+        if isinstance(view, BrowserTab):
+            view.page().runJavaScript(
+                "document.querySelectorAll('video, audio').forEach(function(m) { m.pause(); m.src = ''; });"
+            );
         if self.tabs.count() > 1:
             self.tabs.removeTab(index);
         else:
@@ -295,10 +358,11 @@ class MainWindow(QMainWindow):
     def _open_about(self):
         QMessageBox.about(
             self,
-            "Sobre o BagusBagusGo",
-            "<h2>BagusBagusGo</h2>"
-            "<p>Browser desktop construído com <b>Python 3</b> e <b>PySide6</b> (QtWebEngine).</p>"
-            "<p>Motor de busca padrão: DuckDuckGo.</p>",
+            f"Sobre o {APP_NAME}",
+            f"<h2>{APP_NAME}</h2>"
+            f"<p><b>Versão:</b> {APP_VERSION} ({APP_ID})</p>"
+            f"<p>Browser desktop construído com <b>Python 3</b> e <b>PySide6</b> (QtWebEngine).</p>"
+            f"<p>Motor de busca padrão: DuckDuckGo.</p>",
         );
 
     def _on_tab_changed(self, index: int):
@@ -343,7 +407,7 @@ class MainWindow(QMainWindow):
             short = title[:20] + "…" if len(title) > 20 else title;
             self.tabs.setTabText(index, short or "Nova aba");
             if view is self._current_view():
-                self.setWindowTitle(f"{title} — BagusBagusGo");
+                self.setWindowTitle(f"{title} — {APP_NAME} v{APP_VERSION}");
 
     def _update_nav_buttons(self, view: BrowserTab):
         history = view.history();
