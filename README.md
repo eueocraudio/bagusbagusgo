@@ -1,7 +1,7 @@
 # BagusBagusGo
 
 Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
-Motor de busca padrão: **DuckDuckGo**.
+Motor de busca padrão: **DuckDuckGo** · Tema: **Dark + Vermelho**.
 
 **Repositório:** https://github.com/eueocraudio/bagusbagusgo
 
@@ -33,8 +33,14 @@ pip3 install --break-system-packages PySide6
 ## Iniciando o browser
 
 ```bash
+# Diretório temporário gerado automaticamente em /tmp/
 python3 run.py
+
+# Diretório específico para dados persistentes
+python3 run.py /caminho/do/diretorio
 ```
+
+O caminho do diretório de dados é impresso no terminal ao iniciar.
 
 ---
 
@@ -56,11 +62,11 @@ Digite na barra de endereço e pressione **Enter**:
 
 ---
 
-### 2. Abas
+### 2. Abas de páginas web
 
 | Ação | Como fazer |
 |---|---|
-| Abrir nova aba | Botão `+` na toolbar ou **Ctrl+T** |
+| Abrir nova aba | Botão `+` na barra ou **Ctrl+T** |
 | Fechar aba atual | Botão `✕` na aba ou **Ctrl+W** |
 | Trocar de aba | Clique na aba desejada |
 | Reordenar abas | Arraste a aba para a posição desejada |
@@ -74,56 +80,78 @@ Digite na barra de endereço e pressione **Enter**:
 | Voltar | Botão `←` ou **Alt+←** |
 | Avançar | Botão `→` ou **Alt+→** |
 | Recarregar | Botão `↻` ou **F5** |
-| Parar carregamento | Botão `✕` (aparece durante o carregamento) ou **F5** |
-| Ir para a página inicial | Botão `⌂` (abre o DuckDuckGo) |
-| Focar na barra de endereço | **Ctrl+L** |
+| Parar carregamento | Botão `✕` (durante carregamento) ou **F5** |
+| Página inicial | Botão `⌂` (abre DuckDuckGo) |
+| Focar barra de endereço | **Ctrl+L** |
 
 ---
 
 ### 4. Favoritos
 
-1. Navegue até a página que deseja salvar
-2. Clique no botão `☆` na toolbar ou pressione **Ctrl+D**
-3. O botão muda para `★` — a página está salva
-4. A **barra de favoritos** aparece automaticamente abaixo da toolbar de navegação
-5. Clique em qualquer favorito para navegar direto
+1. Navegue até a página e pressione **Ctrl+D** ou clique em `☆`
+2. O botão muda para `★` — favorito salvo
+3. A **barra de favoritos** aparece abaixo da barra de navegação
+4. Clique em qualquer favorito para navegar direto
 
-**Gerenciar favoritos** (`★≡`):
-- Renomear: selecione o item e clique em "Renomear" (ou duplo-clique)
-- Remover: selecione o item e clique em "Remover"
-
-Para **remover um favorito** da página atual: clique em `★` ou pressione **Ctrl+D** novamente.
+**Gerenciar** (`★≡`): renomear (duplo-clique) e remover favoritos.  
+**Remover favorito atual**: pressione **Ctrl+D** novamente.
 
 ---
 
 ### 5. Histórico
 
-1. Pressione **Ctrl+H** ou clique em `🕐` na toolbar
-2. O diálogo exibe as visitas agrupadas por **Hoje**, **Ontem** e datas anteriores
-3. **Pesquisar**: digite na barra de busca — filtra por título ou URL em tempo real
-4. **Abrir**: selecione uma entrada e clique em "Abrir" (ou duplo-clique) para navegar
-5. **Remover entrada**: selecione e clique em "Remover entrada"
-6. **Limpar tudo**: clique em "Limpar tudo" e confirme
+1. Pressione **Ctrl+H** ou clique em `🕐`
+2. Entradas agrupadas por **Hoje**, **Ontem** e datas anteriores
+3. Pesquisa em tempo real por título ou URL
+4. Duplo-clique numa entrada para navegar
+5. "Limpar tudo" apaga todo o histórico (pede confirmação)
 
 ---
 
 ### 6. Downloads
 
-1. Clique em qualquer link de download em uma página
-2. O **painel de downloads** abre automaticamente na parte inferior da janela
-3. Acompanhe o progresso, velocidade e tamanho em tempo real
-4. Após concluir:
-   - **Abrir**: abre o arquivo com o programa padrão do sistema
-   - **Pasta**: abre a pasta `~/Downloads/` no gerenciador de arquivos
-5. "Limpar concluídos" remove do painel os itens finalizados
+1. Clique em qualquer link de download
+2. O **painel de downloads** abre automaticamente na parte inferior
+3. Progresso, velocidade e tamanho em tempo real
+4. Após concluir: **Abrir** (arquivo) ou **Pasta** (`<base_dir>/downloads/`)
+5. "Limpar concluídos" remove os itens finalizados do painel
 
-Para abrir/fechar o painel manualmente: botão `⬇` na toolbar ou **Ctrl+J**.
+Abrir/fechar manualmente: botão `⬇` ou **Ctrl+J**.
 
 ---
 
-### 7. Captura de cliques via Python
+### 7. Settings (`⚙`)
 
-O browser captura automaticamente o `id` e o `name` de todo elemento clicado e imprime no terminal:
+Botão na extremidade direita da barra de navegação. Menu suspenso com:
+
+- **About** — informações sobre o BagusBagusGo
+
+---
+
+### 8. Tema Dark
+
+Toda a interface usa o tema escuro definido em `src/theme.py`:
+- Fundo `#1a1a1a`, texto `#e0e0e0`
+- Acentos em vermelho `#c0392b` em linhas, bordas, abas ativas e scrollbars
+- Páginas web também em dark mode via `QWebEngineSettings.ForceDarkMode`
+
+---
+
+### 9. User Agent aleatório
+
+A cada inicialização, um User Agent é sorteado de `data/user_agents.txt` e aplicado em todas as requisições. O UA escolhido é impresso no terminal:
+
+```
+[bagusbagusgo] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
+```
+
+Para adicionar ou remover agentes, edite `data/user_agents.txt` — uma linha por agente.
+
+---
+
+### 10. Captura de cliques via Python
+
+Todo elemento clicado tem seu `tag`, `id` e `name` impressos no terminal:
 
 ```
 [clique] tag=<a>,  id="logo"
@@ -131,53 +159,22 @@ O browser captura automaticamente o `id` e o `name` de todo elemento clicado e i
 [clique] tag=<button>,  id="btnK"
 ```
 
-Útil para inspecionar a estrutura de páginas sem abrir o DevTools.
-
 ---
 
-### 8. Injeção de JavaScript por URL
+### 11. Injeção de JavaScript por URL
 
-Em `src/browser.py`, no método `_on_load_finished`, é possível executar JavaScript arbitrário sempre que uma URL específica carregar:
+Em `src/main_window.py`, no método `_on_load_finished`, adicione:
 
 ```python
-if "exemplo.com" in url:
+if "site.com" in url:
     view.page().runJavaScript("document.title = 'Meu título';");
 ```
 
-**Exemplos de uso:**
-
-```python
-# Alterar um elemento pelo seletor CSS
-view.page().runJavaScript(
-    "var h1 = document.querySelector('h1');"
-    "if (h1) { h1.textContent = 'Novo título'; }"
-);
-
-# Localizar elemento por XPath e clicar
-view.page().runJavaScript(
-    "var result = document.evaluate('/html/body/div[1]', document, null,"
-    "  XPathResult.FIRST_ORDERED_NODE_TYPE, null);"
-    "var el = result.singleNodeValue;"
-    "if (el) { el.click(); }"
-);
-
-# Aguardar N segundos e clicar em um link
-view.page().runJavaScript(
-    "setTimeout(function() {"
-    "  var link = document.querySelector('a');"
-    "  if (link) { link.click(); }"
-    "}, 3000);"
-);
-
-# Redirecionar para outro site
-view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
-```
-
-**Regra ativa:** ao entrar em qualquer URL com `google.com`, o browser redireciona automaticamente para o DuckDuckGo.
+**Regra ativa:** qualquer URL com `google.com` é redirecionada para o DuckDuckGo.
 
 ---
 
-## Atalhos — resumo
+## Atalhos
 
 | Atalho | Ação |
 |---|---|
@@ -193,35 +190,41 @@ view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
 
 ---
 
-## Dados do usuário
-
-| Localização | Conteúdo |
-|---|---|
-| `~/.config/bagusbagusgo/bookmarks.json` | Favoritos |
-| `~/.config/bagusbagusgo/history.json` | Histórico (máx. 5000 entradas) |
-| `~/Downloads/` | Arquivos baixados |
-
----
-
-## Interface
-
-A janela principal possui um `QTabWidget` externo com cinco abas:
+## Interface — abas externas
 
 | # | Aba | Conteúdo |
 |---|---|---|
-| 1 | **BagusBagusGo** | Browser completo (navegação, favoritos, páginas web) |
+| 1 | **BagusBagusGo** | Browser completo |
 | 2 | **MyAss** | — |
 | 3 | **Anonymity** | — |
 | 4 | **AutoBot** | — |
 | 5 | **Downloads** | — |
 
+---
+
+## Dados gerados
+
+Todos os arquivos ficam no diretório passado como argumento:
+
+| Localização | Conteúdo |
+|---|---|
+| `<base_dir>/bookmarks.json` | Favoritos |
+| `<base_dir>/history.json` | Histórico (máx. 5000 entradas) |
+| `<base_dir>/downloads/` | Arquivos baixados |
+
+---
+
 ## Estrutura do projeto
 
 ```
 run.py                    — entry point
+data/
+  user_agents.txt         — lista de user agents
 src/
   browser.py              — main()
   constants.py            — constantes globais
+  theme.py                — tema dark + vermelho
+  user_agent.py           — seleção aleatória de user agent
   bookmark_manager.py     — gerenciamento de favoritos
   bookmarks_dialog.py     — diálogo de favoritos
   history_manager.py      — gerenciamento de histórico

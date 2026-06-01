@@ -3,6 +3,7 @@ import tempfile;
 from pathlib import Path;
 from PySide6.QtWidgets import QApplication;
 from .main_window import MainWindow;
+from .theme import DARK_STYLESHEET;
 
 
 def main():
@@ -14,6 +15,7 @@ def main():
     print(f"[bagusbagusgo] diretório de dados: {base_dir}");
     app = QApplication(sys.argv);
     app.setApplicationName("BagusBagusGo");
+    app.setStyleSheet(DARK_STYLESHEET);
     window = MainWindow(base_dir);
     window.show();
     sys.exit(app.exec());

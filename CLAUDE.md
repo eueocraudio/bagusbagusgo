@@ -2,24 +2,33 @@
 
 ## Visão geral
 
-Browser desktop construído com Python 3 e PySide6 (QtWebEngine). Toda a lógica está em `src/browser.py`.
+Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
+Toda a interface está em `src/main_window.py`. Entry point: `run.py`.
 
 ## Como rodar
 
 ```bash
+# Diretório gerado automaticamente em /tmp/
 python3 run.py
+
+# Diretório específico
+python3 run.py /caminho/do/diretorio
 ```
 
-## Estrutura
+## Estrutura de arquivos
 
 ```
-run.py                    — entry point (executa src/browser.main)
+run.py                    — entry point
+data/
+  user_agents.txt         — lista de user agents (um por linha)
 src/
-  browser.py              — main() e entry point do pacote
-  constants.py            — constantes globais (paths, limites)
+  browser.py              — main(): lê argv, aplica tema, inicia MainWindow
+  constants.py            — HISTORY_MAX, DEFAULT_DATA_DIR
+  theme.py                — DARK_STYLESHEET (dark + vermelho)
+  user_agent.py           — random_user_agent(): lê data/user_agents.txt
   bookmark_manager.py     — BookmarkManager (CRUD JSON)
   bookmarks_dialog.py     — ManageBookmarksDialog
-  history_manager.py      — HistoryManager (registro e busca)
+  history_manager.py      — HistoryManager (registro e busca, máx. 5000)
   history_dialog.py       — HistoryDialog
   download_panel.py       — DownloadItemWidget + DownloadPanel
   click_capture.py        — ClickCapture + CLICK_LISTENER_JS
@@ -28,27 +37,31 @@ src/
 install.sh                — instala dependências via pip3
 ```
 
-## Dados persistidos pelo usuário
+## Dados gerados em runtime
+
+Todos os arquivos gerados ficam no diretório passado como argumento (ou em `/tmp/bagusbagusgo_<id>/` se nenhum for informado):
 
 | Arquivo | Conteúdo |
 |---|---|
-| `~/.config/bagusbagusgo/bookmarks.json` | Favoritos |
-| `~/.config/bagusbagusgo/history.json`   | Histórico de navegação |
-| `~/Downloads/`                            | Arquivos baixados |
+| `<base_dir>/bookmarks.json` | Favoritos |
+| `<base_dir>/history.json`   | Histórico de navegação |
+| `<base_dir>/downloads/`     | Arquivos baixados |
 
-## Arquitetura de `src/browser.py`
+## Arquitetura — classes principais
 
-| Classe | Responsabilidade |
+| Classe / módulo | Responsabilidade |
 |---|---|
 | `BookmarkManager` | CRUD de favoritos em JSON |
 | `ManageBookmarksDialog` | Diálogo para renomear/remover favoritos |
-| `HistoryManager` | Registro e busca de histórico (máx. 5000 entradas) |
+| `HistoryManager` | Registro e busca de histórico |
 | `HistoryDialog` | Diálogo com busca, agrupamento por data e limpeza |
-| `ClickCapture` | `QObject` com `@Slot` que recebe cliques do JS via `QWebChannel` e imprime tag/id/name no terminal |
+| `ClickCapture` | `QObject` com `@Slot` — recebe cliques via `QWebChannel` → `print()` |
 | `DownloadItemWidget` | Widget de progresso por arquivo baixado |
 | `DownloadPanel` | `QDockWidget` inferior com lista de downloads |
-| `BrowserTab` | `QWebEngineView`; `createWindow` sobe o chain de parents até `MainWindow` para abrir links em nova aba |
-| `MainWindow` | Janela principal: toolbars, abas, atalhos, orquestra tudo |
+| `BrowserTab` | `QWebEngineView`; recebe `add_tab` como callback |
+| `MainWindow` | Janela principal — orquestra tudo |
+| `DARK_STYLESHEET` | Stylesheet global dark + vermelho aplicado no `QApplication` |
+| `random_user_agent()` | Lê `data/user_agents.txt` e retorna UA aleatório |
 
 ## Layout da janela
 
@@ -57,7 +70,7 @@ MainWindow
 └── outer QTabWidget (5 abas)
     ├── [1] BagusBagusGo  ← browser completo
     │    ├── nav_bar (QWidget + QHBoxLayout)
-    │    │    └── ← → ↻ ⌂ [URL bar] ☆ ★≡ 🕐 ⬇ + ⚙
+    │    │    └── ← → ↻ ⌂  [URL bar]  ☆ ★≡ 🕐 ⬇ + ⚙
     │    ├── bookmarks_bar (QWidget, visível só com favoritos)
     │    ├── progress_bar
     │    └── QTabWidget interno (abas das páginas web)
@@ -67,31 +80,35 @@ MainWindow
     └── [5] Downloads
 ```
 
-As barras de navegação e favoritos são `QWidget` com `QHBoxLayout` (não `QToolBar`), permitindo que fiquem dentro de uma aba do `outer_tabs`.
+## Configurações do QWebEngineProfile
+
+Aplicadas em `MainWindow._connect_downloads()`:
+
+| Configuração | Valor |
+|---|---|
+| `ForceDarkMode` | `True` — força dark mode nas páginas web |
+| `HttpUserAgent` | Aleatório a cada inicialização (lido de `data/user_agents.txt`) |
+| `DownloadPath` | `<base_dir>/downloads/` |
+| `qwebchannel.js` | Injetado em toda página via `QWebEngineScript` (DocumentCreation) |
 
 ## Injeção de JavaScript por URL
 
-O ponto de extensão para automações é `_on_load_finished` em `MainWindow`. Após cada página carregar, verificar a URL e chamar `view.page().runJavaScript(...)`:
+Ponto de extensão: `_on_load_finished` em `MainWindow`.
 
 ```python
-def _on_load_finished(self, view: BrowserTab):
-    url = view.url().toString();
-    ...
-    if "site.com" in url:
-        view.page().runJavaScript("/* JS aqui */");
+if "site.com" in url:
+    view.page().runJavaScript("/* JS aqui */");
 ```
 
-**Regras ativas no momento:**
+**Regras ativas:**
 
 | Condição | Ação |
 |---|---|
-| `"google.com" in url` | Redireciona para `https://duckduckgo.com` via `window.location.href` |
-
-Ao adicionar nova regra, atualizar a tabela acima.
+| `"google.com" in url` | Redireciona para `https://duckduckgo.com` |
 
 ## Captura de cliques
 
-`qwebchannel.js` é injetado em todas as páginas via `QWebEngineScript` no perfil (`DocumentCreation`, `MainWorld`). Após cada `loadFinished`, `_CLICK_LISTENER_JS` instala um `addEventListener('click')` que envia `tag`, `id` e `name` do elemento clicado ao Python via `QWebChannel` → `ClickCapture.elementClicked` → `print()`.
+`CLICK_LISTENER_JS` é injetado após cada `loadFinished`. Envia `tag`, `id` e `name` do elemento clicado via `QWebChannel` → `ClickCapture.elementClicked` → `print()`.
 
 ## Regras de desenvolvimento
 
@@ -99,10 +116,11 @@ Ao adicionar nova regra, atualizar a tabela acima.
 - Usar PySide6 para qualquer elemento de interface
 - Terminar instruções Python com `;`
 - Usar 4 espaços para indentação (nunca TAB)
-- Não usar `QApplication.exec_()` (deprecated); usar `app.exec()`
+- Não usar `QApplication.exec_()` (deprecated) — usar `app.exec()`
 - Motor de busca padrão: DuckDuckGo (`https://duckduckgo.com/?q=`)
 - Página inicial e botão home: `https://duckduckgo.com`
-- `BrowserTab` recebe `add_tab` como callback no construtor — não importa `MainWindow` (evita import circular)
-- O comando de execução é `python3 run.py` (não `python3 src/browser.py`)
+- `BrowserTab` recebe `add_tab` como callback — não importa `MainWindow`
 - Barras de navegação e favoritos são `QWidget` + `QHBoxLayout`, não `QToolBar`
-- Ao adicionar nova aba no `outer_tabs`, usar `self.outer_tabs.addTab(QWidget(), "Nome")`
+- Ao adicionar nova aba externa: `self.outer_tabs.addTab(QWidget(), "Nome")`
+- User agents ficam em `data/user_agents.txt` — um por linha, linhas vazias ignoradas
+- Tema visual em `src/theme.py` — editar `DARK_STYLESHEET` para mudar cores

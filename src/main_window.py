@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QStatusBar, QProgressBar, QSizePolicy,
     QToolButton, QMenu, QMessageBox, QScrollArea,
 );
-from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineDownloadRequest, QWebEngineScript;
+from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineDownloadRequest, QWebEngineScript, QWebEngineSettings;
 from PySide6.QtWebChannel import QWebChannel;
 from PySide6.QtCore import QUrl, Qt;
 from PySide6.QtGui import QKeySequence, QShortcut;
@@ -17,6 +17,7 @@ from .history_dialog import HistoryDialog;
 from .download_panel import DownloadPanel;
 from .click_capture import ClickCapture, CLICK_LISTENER_JS;
 from .browser_tab import BrowserTab;
+from .user_agent import random_user_agent;
 
 
 class MainWindow(QMainWindow):
@@ -35,6 +36,11 @@ class MainWindow(QMainWindow):
 
     def _connect_downloads(self):
         profile = QWebEngineProfile.defaultProfile();
+        profile.settings().setAttribute(QWebEngineSettings.WebAttribute.ForceDarkMode, True);
+        ua = random_user_agent();
+        if ua:
+            profile.setHttpUserAgent(ua);
+            print(f"[bagusbagusgo] user-agent: {ua}");
         profile.setDownloadPath(str(self._downloads_dir));
         profile.downloadRequested.connect(self._on_download_requested);
         qwc_script = QWebEngineScript();
@@ -130,20 +136,12 @@ class MainWindow(QMainWindow):
         self.bookmarks_layout.setContentsMargins(4, 0, 4, 0);
         self.bookmarks_layout.setSpacing(2);
         self.bookmarks_layout.addStretch();
-        self.bookmarks_bar.setStyleSheet(
-            "QPushButton { border: none; padding: 2px 6px; border-radius: 3px; }"
-            "QPushButton:hover { background: #e0e0e0; }"
-        );
         self._refresh_bookmarks_bar();
 
         # --- barra de progresso ---
         self.progress_bar = QProgressBar();
         self.progress_bar.setMaximumHeight(4);
         self.progress_bar.setTextVisible(False);
-        self.progress_bar.setStyleSheet(
-            "QProgressBar { border: none; background: transparent; }"
-            "QProgressBar::chunk { background: #4285f4; }"
-        );
 
         # --- abas internas (páginas web) ---
         self.tabs = QTabWidget();
