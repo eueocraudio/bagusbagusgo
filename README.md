@@ -3,6 +3,8 @@
 Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
 Motor de busca padrão: **DuckDuckGo**.
 
+**Repositório:** https://github.com/eueocraudio/bagusbagusgo
+
 ---
 
 ## Requisitos
