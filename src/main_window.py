@@ -18,6 +18,7 @@ from .download_panel import DownloadPanel;
 from .click_capture import ClickCapture, CLICK_LISTENER_JS;
 from .browser_tab import BrowserTab;
 from .user_agent import random_user_agent;
+from .myass.panel import MyAssPanel;
 
 
 class MainWindow(QMainWindow):
@@ -164,7 +165,7 @@ class MainWindow(QMainWindow):
         # --- tab externo (envolve o browser inteiro) ---
         self.outer_tabs = QTabWidget();
         self.outer_tabs.addTab(browser_widget, "BagusBagusGo");
-        self.outer_tabs.addTab(QWidget(), "MyAss");
+        self.outer_tabs.addTab(MyAssPanel(), "MyAss");
         self.outer_tabs.addTab(QWidget(), "Anonymity");
         self.outer_tabs.addTab(QWidget(), "AutoBot");
         self.outer_tabs.addTab(QWidget(), "Downloads");

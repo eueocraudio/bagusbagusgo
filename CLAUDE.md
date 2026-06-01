@@ -34,6 +34,9 @@ src/
   click_capture.py        — ClickCapture + CLICK_LISTENER_JS
   browser_tab.py          — BrowserTab (recebe add_tab como callback)
   main_window.py          — MainWindow (orquestra tudo)
+  myass/
+    __init__.py
+    panel.py              — MyAssPanel (barra de botões + tabela)
 install.sh                — instala dependências via pip3
 ```
 
@@ -62,6 +65,7 @@ Todos os arquivos gerados ficam no diretório passado como argumento (ou em `/tm
 | `MainWindow` | Janela principal — orquestra tudo |
 | `DARK_STYLESHEET` | Stylesheet global dark + vermelho aplicado no `QApplication` |
 | `random_user_agent()` | Lê `data/user_agents.txt` e retorna UA aleatório |
+| `MyAssPanel` | Painel da aba MyAss: barra de botões (direita) + tabela 4 colunas |
 
 ## Layout da janela
 

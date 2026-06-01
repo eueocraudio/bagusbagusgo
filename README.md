@@ -195,7 +195,7 @@ if "site.com" in url:
 | # | Aba | Conteúdo |
 |---|---|---|
 | 1 | **BagusBagusGo** | Browser completo |
-| 2 | **MyAss** | — |
+| 2 | **MyAss** | Barra de botões (New work, New flow) + tabela 4 colunas |
 | 3 | **Anonymity** | — |
 | 4 | **AutoBot** | — |
 | 5 | **Downloads** | — |
@@ -233,6 +233,9 @@ src/
   click_capture.py        — captura de cliques via QWebChannel
   browser_tab.py          — aba do browser
   main_window.py          — janela principal
+  myass/
+    __init__.py
+    panel.py              — MyAssPanel
 install.sh                — script de instalação
 CLAUDE.md                 — instruções para o Claude Code
 README.md                 — esta documentação
