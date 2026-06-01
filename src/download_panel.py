@@ -178,3 +178,4 @@ class DownloadPanel(QDockWidget):
                 self._items.remove(item);
                 item.setParent(None);
                 item.deleteLater();
+        self.hide();

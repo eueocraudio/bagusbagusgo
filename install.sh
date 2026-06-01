@@ -13,7 +13,7 @@ fi
 echo "Instalando dependências Python..."
 pip3 install --break-system-packages PySide6
 
-# Verifica QtWebEngine (incluído no PySide6, mas verifica o import)
+# Verifica QtWebEngine
 echo "Verificando QtWebEngine..."
 python3 -c "from PySide6.QtWebEngineWidgets import QWebEngineView" \
     || { echo "Erro: QtWebEngine não disponível. Tente: pip3 install --break-system-packages PySide6[WebEngine]"; exit 1; }
@@ -22,8 +22,17 @@ python3 -c "from PySide6.QtWebEngineWidgets import QWebEngineView" \
 python3 -c "from PySide6.QtWebChannel import QWebChannel" \
     || { echo "Erro: QtWebChannel não disponível."; exit 1; }
 
-# Cria diretório de dados
-mkdir -p "$HOME/.config/bagusbagusgo"
+# Verifica extensões estáticas
+echo "Verificando extensões..."
+EXTENSIONS_DIR="$(dirname "$0")/data/extensions"
+if [ ! -d "$EXTENSIONS_DIR/uBlock0.chromium" ]; then
+    echo "Aviso: uBlock Origin não encontrado em data/extensions/."
+    echo "       Certifique-se de ter clonado o repositório completo."
+else
+    echo "  ✓ uBlock Origin: $(python3 -c "import json; m=json.load(open('$EXTENSIONS_DIR/uBlock0.chromium/manifest.json')); print(m['version'])")"
+fi
+
+# Cria diretório de dados padrão
 mkdir -p "$HOME/Downloads"
 
 # Torna o script executável (idempotente)

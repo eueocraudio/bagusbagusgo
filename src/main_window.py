@@ -21,6 +21,8 @@ from .browser_tab import BrowserTab;
 from .user_agent import random_user_agent, navigator_spoof_script;
 from .session_manager import SessionManager;
 from .request_interceptor import UserAgentInterceptor, YOUTUBE_SPOOF_JS;
+from .ad_blocker import build_ad_block_js;
+from .extension_manager import load_extensions;
 from .myass.panel import MyAssPanel;
 
 
@@ -58,6 +60,7 @@ class MainWindow(QMainWindow):
 
     def _connect_downloads(self):
         profile = QWebEngineProfile.defaultProfile();
+        load_extensions(profile);
         profile.settings().setAttribute(QWebEngineSettings.WebAttribute.ForceDarkMode, True);
         ua = random_user_agent();
         if ua:
@@ -100,6 +103,12 @@ class MainWindow(QMainWindow):
         ad_skip.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady);
         ad_skip.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
         profile.scripts().insert(ad_skip);
+        ad_block = QWebEngineScript();
+        ad_block.setName("ad_blocker");
+        ad_block.setSourceCode(build_ad_block_js());
+        ad_block.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady);
+        ad_block.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
+        profile.scripts().insert(ad_block);
         profile.setDownloadPath(str(self._downloads_dir));
         profile.downloadRequested.connect(self._on_download_requested);
         qwc_script = QWebEngineScript();

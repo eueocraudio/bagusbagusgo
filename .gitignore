@@ -38,6 +38,8 @@ Thumbs.db
 # Dados do usuário (não versionar)
 *.json
 !package.json
+# Extensões do browser são estáticas no projeto
+!data/extensions/**
 
 # Logs
 *.log
