@@ -5,6 +5,8 @@ Motor de busca padrão: **DuckDuckGo**.
 
 **Repositório:** https://github.com/eueocraudio/bagusbagusgo
 
+![Screenshot](docs/screenshot.png)
+
 ---
 
 ## Requisitos
