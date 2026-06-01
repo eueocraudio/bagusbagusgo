@@ -20,9 +20,9 @@ from .click_capture import ClickCapture, CLICK_LISTENER_JS;
 from .browser_tab import BrowserTab;
 from .user_agent import random_user_agent, navigator_spoof_script;
 from .session_manager import SessionManager;
-from .request_interceptor import UserAgentInterceptor, YOUTUBE_SPOOF_JS;
 from .ad_blocker import build_ad_block_js;
 from .extension_manager import load_extensions;
+from .env_config import get_bool;
 from .myass.panel import MyAssPanel;
 
 
@@ -72,14 +72,6 @@ class MainWindow(QMainWindow):
             spoof_script.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation);
             spoof_script.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
             profile.scripts().insert(spoof_script);
-        self._interceptor = UserAgentInterceptor();
-        profile.setUrlRequestInterceptor(self._interceptor);
-        yt_spoof = QWebEngineScript();
-        yt_spoof.setName("youtube_ua_spoof");
-        yt_spoof.setSourceCode(YOUTUBE_SPOOF_JS);
-        yt_spoof.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation);
-        yt_spoof.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
-        profile.scripts().insert(yt_spoof);
         ad_skip = QWebEngineScript();
         ad_skip.setName("youtube_ad_skipper");
         ad_skip.setSourceCode("""
@@ -103,12 +95,16 @@ class MainWindow(QMainWindow):
         ad_skip.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady);
         ad_skip.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
         profile.scripts().insert(ad_skip);
-        ad_block = QWebEngineScript();
-        ad_block.setName("ad_blocker");
-        ad_block.setSourceCode(build_ad_block_js());
-        ad_block.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady);
-        ad_block.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
-        profile.scripts().insert(ad_block);
+        if get_bool("AD_BLOCKER_ENABLED", default=False):
+            ad_block = QWebEngineScript();
+            ad_block.setName("ad_blocker");
+            ad_block.setSourceCode(build_ad_block_js());
+            ad_block.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentReady);
+            ad_block.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
+            profile.scripts().insert(ad_block);
+            print("[ad_blocker] habilitado");
+        else:
+            print("[ad_blocker] desabilitado (AD_BLOCKER_ENABLED=false)");
         profile.setDownloadPath(str(self._downloads_dir));
         profile.downloadRequested.connect(self._on_download_requested);
         qwc_script = QWebEngineScript();
@@ -397,8 +393,6 @@ class MainWindow(QMainWindow):
         if url and url != "about:blank":
             self.history.record(view.title() or url, url);
         view.page().runJavaScript(CLICK_LISTENER_JS);
-        if "google.com" in url:
-            view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
         if view is self._current_view():
             self.btn_reload.setText("↻");
             self.progress_bar.hide();

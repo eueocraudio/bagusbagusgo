@@ -2,7 +2,7 @@
 
 ## Versão atual
 
-**v2.0.0** — constantes em `src/constants.py` (`APP_NAME`, `APP_VERSION`, `APP_ID`).
+**v2.0.1** — constantes em `src/constants.py` (`APP_NAME`, `APP_VERSION`, `APP_ID`).
 
 ## Visão geral
 
@@ -32,7 +32,7 @@ src/
   constants.py              — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_DATA_DIR
   theme.py                  — DARK_STYLESHEET (dark + vermelho)
   user_agent.py             — random_user_agent(), navigator_spoof_script(ua)
-  request_interceptor.py    — UserAgentInterceptor, YOUTUBE_UA, YOUTUBE_SPOOF_JS
+  request_interceptor.py    — UserAgentInterceptor (interceptor HTTP por domínio)
   session_manager.py        — SessionManager: salva/restaura URLs das abas
   bookmark_manager.py       — BookmarkManager (CRUD JSON)
   bookmarks_dialog.py       — ManageBookmarksDialog
@@ -77,12 +77,12 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 | `DARK_STYLESHEET` | Stylesheet global dark + vermelho aplicado no `QApplication` |
 | `random_user_agent()` | Lê `data/user_agents.txt` e retorna UA aleatório |
 | `navigator_spoof_script(ua)` | Gera JS que sobrescreve `navigator.*` para mascarar QtWebEngine |
-| `UserAgentInterceptor` | Substitui header `User-Agent` nas requisições HTTP por domínio |
+| `UserAgentInterceptor` | Intercepta requisições HTTP por domínio (extensível) |
 
 ## Layout da janela
 
 ```
-MainWindow  (título: "BagusBagusGo v2.0.0")
+MainWindow  (título: "BagusBagusGo v2.0.1")
 └── outer QTabWidget (5 abas)
     ├── [1] BagusBagusGo  ← browser completo
     │    ├── nav_bar (QWidget + QHBoxLayout)
@@ -105,11 +105,10 @@ Aplicadas em `MainWindow._connect_downloads()`:
 | `ForceDarkMode` | `True` |
 | `HttpUserAgent` | Aleatório a cada inicialização |
 | `DownloadPath` | `<base_dir>/downloads/` |
-| `navigator_spoof` script | Injeta em `DocumentCreation` — sobrescreve `navigator.*` |
-| `youtube_ua_spoof` script | Injeta em `DocumentCreation` — spoof completo para youtube.com |
+| `navigator_spoof` script | Injeta em `DocumentCreation` — sobrescreve `navigator.*`, `plugins`, `mimeTypes`, `window.chrome` |
 | `youtube_ad_skipper` script | Injeta em `DocumentReady` — pula propagandas automaticamente |
+| `ad_blocker` script | Injeta em `DocumentReady` — remove elementos por seletor CSS (requer `AD_BLOCKER_ENABLED=true`) |
 | `qwebchannel.js` | Injeta em `DocumentCreation` via `QWebEngineScript` |
-| `UserAgentInterceptor` | youtube.com → `Firefox/140.0` no header HTTP |
 
 ## Comportamentos automáticos por URL
 

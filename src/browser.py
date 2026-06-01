@@ -1,11 +1,30 @@
 import sys;
+import os;
 import tempfile;
 from pathlib import Path;
 from PySide6.QtWidgets import QApplication;
+from . import env_config as _env;
+_env.load();
 from .main_window import MainWindow;
 from .theme import DARK_STYLESHEET;
 from .constants import APP_NAME, APP_VERSION, APP_ID;
 from . import logger as _logger_mod;
+
+
+def _apply_chromium_flags():
+    flags = [];
+    if _env.get_bool("WEBGL_FORCE", default=False):
+        flags += [
+            "--ignore-gpu-blocklist",
+            "--enable-webgl",
+            "--enable-webgl2",
+            "--enable-accelerated-2d-canvas",
+        ];
+        print(f"[{APP_ID}] WebGL forçado (WEBGL_FORCE=true)");
+    else:
+        flags += ["--disable-webgl", "--disable-webgl2"];
+    existing = os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", "");
+    os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = (existing + " " + " ".join(flags)).strip();
 
 
 def main(args: list[str] = None):
@@ -16,6 +35,7 @@ def main(args: list[str] = None):
         base_dir.mkdir(parents=True, exist_ok=True);
     else:
         base_dir = Path(tempfile.mkdtemp(prefix="bagusbagusgo_", dir="/tmp"));
+    _apply_chromium_flags();
     _logger_mod.setup(base_dir);
     print(f"[{APP_ID} v{APP_VERSION}] diretório de dados: {base_dir}");
     app = QApplication(args);

@@ -41,5 +41,8 @@ Thumbs.db
 # Extensões do browser são estáticas no projeto
 !data/extensions/**
 
+# Configuração local (não versionar)
+.env
+
 # Logs
 *.log
