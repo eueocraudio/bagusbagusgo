@@ -1,9 +1,9 @@
 from pathlib import Path;
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLineEdit, QPushButton, QTabWidget, QToolBar,
+    QLineEdit, QPushButton, QTabWidget,
     QStatusBar, QProgressBar, QSizePolicy,
-    QToolButton, QMenu, QMessageBox,
+    QToolButton, QMenu, QMessageBox, QScrollArea,
 );
 from PySide6.QtWebEngineCore import QWebEngineProfile, QWebEngineDownloadRequest, QWebEngineScript;
 from PySide6.QtWebChannel import QWebChannel;
@@ -51,92 +51,92 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.download_panel);
 
     def _build_ui(self):
-        nav_toolbar = QToolBar("Navegação");
-        nav_toolbar.setMovable(False);
-        self.addToolBar(nav_toolbar);
+        # --- barra de navegação ---
+        nav_bar = QWidget();
+        nav_bar.setFixedHeight(36);
+        nav_layout = QHBoxLayout(nav_bar);
+        nav_layout.setContentsMargins(4, 2, 4, 2);
+        nav_layout.setSpacing(2);
 
         self.btn_back = QPushButton("←");
         self.btn_back.setFixedWidth(32);
         self.btn_back.clicked.connect(lambda: self._current_view().back());
-        nav_toolbar.addWidget(self.btn_back);
+        nav_layout.addWidget(self.btn_back);
 
         self.btn_forward = QPushButton("→");
         self.btn_forward.setFixedWidth(32);
         self.btn_forward.clicked.connect(lambda: self._current_view().forward());
-        nav_toolbar.addWidget(self.btn_forward);
+        nav_layout.addWidget(self.btn_forward);
 
         self.btn_reload = QPushButton("↻");
         self.btn_reload.setFixedWidth(32);
         self.btn_reload.clicked.connect(self._reload_or_stop);
-        nav_toolbar.addWidget(self.btn_reload);
+        nav_layout.addWidget(self.btn_reload);
 
         self.btn_home = QPushButton("⌂");
         self.btn_home.setFixedWidth(32);
         self.btn_home.clicked.connect(self._go_home);
-        nav_toolbar.addWidget(self.btn_home);
+        nav_layout.addWidget(self.btn_home);
 
         self.url_bar = QLineEdit();
         self.url_bar.setPlaceholderText("Digite um endereço ou pesquise...");
         self.url_bar.returnPressed.connect(self._navigate_to_url);
         self.url_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding);
-        url_container = QWidget();
-        url_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred);
-        url_container_layout = QHBoxLayout(url_container);
-        url_container_layout.setContentsMargins(0, 0, 0, 0);
-        url_container_layout.addWidget(self.url_bar, 1);
-        nav_toolbar.addWidget(url_container);
+        nav_layout.addWidget(self.url_bar, 1);
 
         self.btn_bookmark = QPushButton("☆");
         self.btn_bookmark.setFixedWidth(32);
         self.btn_bookmark.setToolTip("Adicionar/remover favorito (Ctrl+D)");
         self.btn_bookmark.clicked.connect(self._toggle_bookmark);
-        nav_toolbar.addWidget(self.btn_bookmark);
+        nav_layout.addWidget(self.btn_bookmark);
 
         self.btn_manage_bookmarks = QPushButton("★≡");
         self.btn_manage_bookmarks.setFixedWidth(40);
         self.btn_manage_bookmarks.setToolTip("Gerenciar favoritos");
         self.btn_manage_bookmarks.clicked.connect(self._open_manage_dialog);
-        nav_toolbar.addWidget(self.btn_manage_bookmarks);
+        nav_layout.addWidget(self.btn_manage_bookmarks);
 
         self.btn_history = QPushButton("🕐");
         self.btn_history.setFixedWidth(36);
         self.btn_history.setToolTip("Histórico (Ctrl+H)");
         self.btn_history.clicked.connect(self._open_history_dialog);
-        nav_toolbar.addWidget(self.btn_history);
+        nav_layout.addWidget(self.btn_history);
 
         self.btn_downloads = QPushButton("⬇");
         self.btn_downloads.setFixedWidth(32);
         self.btn_downloads.setToolTip("Downloads (Ctrl+J)");
         self.btn_downloads.clicked.connect(self._toggle_downloads_panel);
-        nav_toolbar.addWidget(self.btn_downloads);
+        nav_layout.addWidget(self.btn_downloads);
 
         self.btn_new_tab = QPushButton("+");
         self.btn_new_tab.setFixedWidth(32);
         self.btn_new_tab.clicked.connect(lambda: self.add_tab());
-        nav_toolbar.addWidget(self.btn_new_tab);
+        nav_layout.addWidget(self.btn_new_tab);
 
         settings_menu = QMenu(self);
         settings_menu.addAction("About", self._open_about);
-
         self.btn_settings = QToolButton();
         self.btn_settings.setText("⚙");
         self.btn_settings.setFixedWidth(32);
         self.btn_settings.setToolTip("Configurações");
         self.btn_settings.setMenu(settings_menu);
         self.btn_settings.setPopupMode(QToolButton.InstantPopup);
-        nav_toolbar.addWidget(self.btn_settings);
+        nav_layout.addWidget(self.btn_settings);
 
-        self.bookmarks_toolbar = QToolBar("Favoritos");
-        self.bookmarks_toolbar.setMovable(False);
-        self.bookmarks_toolbar.setStyleSheet(
-            "QToolBar { spacing: 2px; padding: 2px; }"
+        # --- barra de favoritos ---
+        self.bookmarks_bar = QWidget();
+        self.bookmarks_bar.setFixedHeight(28);
+        self.bookmarks_layout = QHBoxLayout(self.bookmarks_bar);
+        self.bookmarks_layout.setContentsMargins(4, 0, 4, 0);
+        self.bookmarks_layout.setSpacing(2);
+        self.bookmarks_layout.addStretch();
+        self.bookmarks_bar.setStyleSheet(
             "QPushButton { border: none; padding: 2px 6px; border-radius: 3px; }"
             "QPushButton:hover { background: #e0e0e0; }"
         );
-        self.addToolBarBreak(Qt.TopToolBarArea);
-        self.addToolBar(Qt.TopToolBarArea, self.bookmarks_toolbar);
         self._refresh_bookmarks_bar();
 
+        # --- barra de progresso ---
         self.progress_bar = QProgressBar();
         self.progress_bar.setMaximumHeight(4);
         self.progress_bar.setTextVisible(False);
@@ -145,6 +145,7 @@ class MainWindow(QMainWindow):
             "QProgressBar::chunk { background: #4285f4; }"
         );
 
+        # --- abas internas (páginas web) ---
         self.tabs = QTabWidget();
         self.tabs.setDocumentMode(True);
         self.tabs.setTabsClosable(True);
@@ -152,14 +153,26 @@ class MainWindow(QMainWindow):
         self.tabs.tabCloseRequested.connect(self.close_tab);
         self.tabs.currentChanged.connect(self._on_tab_changed);
 
-        central = QWidget();
-        layout = QVBoxLayout(central);
-        layout.setContentsMargins(0, 0, 0, 0);
-        layout.setSpacing(0);
-        layout.addWidget(self.progress_bar);
-        layout.addWidget(self.tabs);
-        self.setCentralWidget(central);
+        # --- browser widget (tudo junto) ---
+        browser_widget = QWidget();
+        browser_layout = QVBoxLayout(browser_widget);
+        browser_layout.setContentsMargins(0, 0, 0, 0);
+        browser_layout.setSpacing(0);
+        browser_layout.addWidget(nav_bar);
+        browser_layout.addWidget(self.bookmarks_bar);
+        browser_layout.addWidget(self.progress_bar);
+        browser_layout.addWidget(self.tabs);
 
+        # --- tab externo (envolve o browser inteiro) ---
+        self.outer_tabs = QTabWidget();
+        self.outer_tabs.addTab(browser_widget, "BagusBagusGo");
+        self.outer_tabs.addTab(QWidget(), "MyAss");
+        self.outer_tabs.addTab(QWidget(), "Anonymity");
+        self.outer_tabs.addTab(QWidget(), "AutoBot");
+        self.outer_tabs.addTab(QWidget(), "Downloads");
+        self.setCentralWidget(self.outer_tabs);
+
+        # --- painel de downloads ---
         self.download_panel = DownloadPanel(self);
         self.addDockWidget(Qt.BottomDockWidgetArea, self.download_panel);
         self.download_panel.hide();
@@ -168,15 +181,19 @@ class MainWindow(QMainWindow):
         self.setStatusBar(self.status_bar);
 
     def _refresh_bookmarks_bar(self):
-        self.bookmarks_toolbar.clear();
+        while self.bookmarks_layout.count():
+            item = self.bookmarks_layout.takeAt(0);
+            if item.widget():
+                item.widget().deleteLater();
         for b in self.bookmarks.all():
             btn = QPushButton(b["title"]);
             btn.setMaximumWidth(160);
             url = b["url"];
             btn.clicked.connect(lambda checked=False, u=url: self._current_view().load(QUrl(u)));
             btn.setToolTip(url);
-            self.bookmarks_toolbar.addWidget(btn);
-        self.bookmarks_toolbar.setVisible(len(self.bookmarks.all()) > 0);
+            self.bookmarks_layout.addWidget(btn);
+        self.bookmarks_layout.addStretch();
+        self.bookmarks_bar.setVisible(len(self.bookmarks.all()) > 0);
 
     def _build_shortcuts(self):
         QShortcut(QKeySequence("Ctrl+T"), self).activated.connect(lambda: self.add_tab());

@@ -203,6 +203,18 @@ view.page().runJavaScript("window.location.href = 'https://duckduckgo.com';");
 
 ---
 
+## Interface
+
+A janela principal possui um `QTabWidget` externo com cinco abas:
+
+| # | Aba | Conteúdo |
+|---|---|---|
+| 1 | **BagusBagusGo** | Browser completo (navegação, favoritos, páginas web) |
+| 2 | **MyAss** | — |
+| 3 | **Anonymity** | — |
+| 4 | **AutoBot** | — |
+| 5 | **Downloads** | — |
+
 ## Estrutura do projeto
 
 ```

@@ -50,15 +50,24 @@ install.sh                — instala dependências via pip3
 | `BrowserTab` | `QWebEngineView`; `createWindow` sobe o chain de parents até `MainWindow` para abrir links em nova aba |
 | `MainWindow` | Janela principal: toolbars, abas, atalhos, orquestra tudo |
 
-## Layout das toolbars
+## Layout da janela
 
 ```
-Linha 1: nav_toolbar  (ocupa 100% da largura)
-          ← → ↻ ⌂ [URL bar — expansível] ☆ ★≡ 🕐 ⬇ +
-Linha 2: bookmarks_toolbar  (visível apenas quando há favoritos)
+MainWindow
+└── outer QTabWidget (5 abas)
+    ├── [1] BagusBagusGo  ← browser completo
+    │    ├── nav_bar (QWidget + QHBoxLayout)
+    │    │    └── ← → ↻ ⌂ [URL bar] ☆ ★≡ 🕐 ⬇ + ⚙
+    │    ├── bookmarks_bar (QWidget, visível só com favoritos)
+    │    ├── progress_bar
+    │    └── QTabWidget interno (abas das páginas web)
+    ├── [2] MyAss
+    ├── [3] Anonymity
+    ├── [4] AutoBot
+    └── [5] Downloads
 ```
 
-A `nav_toolbar` fica sozinha na linha 1 graças ao `addToolBarBreak` inserido **antes** da `bookmarks_toolbar`. A barra de URL usa um `QWidget` container com `QSizePolicy.Expanding` e `addWidget(..., stretch=1)` para preencher todo o espaço disponível.
+As barras de navegação e favoritos são `QWidget` com `QHBoxLayout` (não `QToolBar`), permitindo que fiquem dentro de uma aba do `outer_tabs`.
 
 ## Injeção de JavaScript por URL
 
@@ -95,3 +104,5 @@ Ao adicionar nova regra, atualizar a tabela acima.
 - Página inicial e botão home: `https://duckduckgo.com`
 - `BrowserTab` recebe `add_tab` como callback no construtor — não importa `MainWindow` (evita import circular)
 - O comando de execução é `python3 run.py` (não `python3 src/browser.py`)
+- Barras de navegação e favoritos são `QWidget` + `QHBoxLayout`, não `QToolBar`
+- Ao adicionar nova aba no `outer_tabs`, usar `self.outer_tabs.addTab(QWidget(), "Nome")`
