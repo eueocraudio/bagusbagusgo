@@ -22,7 +22,7 @@ def _fmt_size(b: int) -> str:
 class DownloadItemWidget(QFrame):
     def __init__(self, download: QWebEngineDownloadRequest, parent=None):
         super().__init__(parent);
-        self.download = download;
+        self._download = download;
         self._last_bytes = 0;
         self._last_tick_bytes = 0;
         self._speed = 0;
@@ -41,15 +41,15 @@ class DownloadItemWidget(QFrame):
         layout.setSpacing(2);
 
         top_row = QHBoxLayout();
-        filename = Path(self.download.downloadFileName()).name;
+        filename = Path(self._download.downloadFileName()).name;
         self.lbl_name = QLabel(filename);
         self.lbl_name.setStyleSheet("font-weight: bold;");
-        self.lbl_name.setToolTip(str(self.download.downloadDirectory()) + "/" + filename);
+        self.lbl_name.setToolTip(str(self._download.downloadDirectory()) + "/" + filename);
         top_row.addWidget(self.lbl_name, 1);
 
         self.btn_cancel = QPushButton("Cancelar");
         self.btn_cancel.setFixedWidth(72);
-        self.btn_cancel.clicked.connect(self.download.cancel);
+        self.btn_cancel.clicked.connect(self._download.cancel);
         top_row.addWidget(self.btn_cancel);
 
         self.btn_open = QPushButton("Abrir");
@@ -77,12 +77,12 @@ class DownloadItemWidget(QFrame):
         layout.addWidget(self.lbl_status);
 
     def _connect_signals(self):
-        self.download.receivedBytesChanged.connect(self._on_progress);
-        self.download.stateChanged.connect(self._on_state_changed);
+        self._download.receivedBytesChanged.connect(self._on_progress);
+        self._download.stateChanged.connect(self._on_state_changed);
 
     def _on_progress(self):
-        received = self.download.receivedBytes();
-        total = self.download.totalBytes();
+        received = self._download.receivedBytes();
+        total = self._download.totalBytes();
         self._last_bytes = received;
         if total > 0:
             self.progress.setValue(int(received * 100 / total));
@@ -102,7 +102,7 @@ class DownloadItemWidget(QFrame):
         if state == QWebEngineDownloadRequest.DownloadState.DownloadCompleted:
             self.progress.setRange(0, 100);
             self.progress.setValue(100);
-            self.lbl_status.setText(f"Concluído  —  {_fmt_size(self.download.receivedBytes())}");
+            self.lbl_status.setText(f"Concluído  —  {_fmt_size(self._download.receivedBytes())}");
             self.lbl_status.setStyleSheet("color: green; font-size: 11px;");
             self.btn_open.setVisible(True);
             self.btn_folder.setVisible(True);
@@ -118,14 +118,14 @@ class DownloadItemWidget(QFrame):
             self.btn_folder.setVisible(True);
 
     def _open_file(self):
-        path = str(Path(self.download.downloadDirectory()) / self.download.downloadFileName());
+        path = str(Path(self._download.downloadDirectory()) / self._download.downloadFileName());
         if sys.platform == "win32":
             os.startfile(path);
         else:
             subprocess.Popen(["xdg-open", path]);
 
     def _open_folder(self):
-        subprocess.Popen(["xdg-open", str(self.download.downloadDirectory())]);
+        subprocess.Popen(["xdg-open", str(self._download.downloadDirectory())]);
 
 
 class DownloadPanel(QDockWidget):
@@ -174,7 +174,7 @@ class DownloadPanel(QDockWidget):
             QWebEngineDownloadRequest.DownloadState.DownloadInterrupted,
         };
         for item in list(self._items):
-            if item.download.state() in done_states:
+            if item._download.state() in done_states:
                 self._items.remove(item);
                 item.setParent(None);
                 item.deleteLater();

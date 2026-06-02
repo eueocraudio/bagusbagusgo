@@ -2,7 +2,8 @@ import re;
 import urllib.request;
 from pathlib import Path;
 
-_UA_FILE = Path(__file__).parent.parent.parent / "data" / "user_agents.txt";
+_ROOT = Path(__file__).parent.parent.parent;
+_UA_FILE = _ROOT / "data" / "user_agents.txt";
 
 _SOURCES = [
     "https://www.whatismybrowser.com/guides/the-latest-user-agent/chrome",
@@ -27,7 +28,7 @@ def _fetch(url: str) -> list[str]:
     return [ua.strip() for ua in uas if not any(m in ua for m in _MOBILE)];
 
 
-def update(ua_file: Path = _UA_FILE) -> tuple[int, str]:
+def update(path: Path = _UA_FILE) -> tuple[int, str]:
     collected: list[str] = [];
     errors: list[str] = [];
     for url in _SOURCES:
@@ -44,8 +45,8 @@ def update(ua_file: Path = _UA_FILE) -> tuple[int, str]:
     if not unique:
         return 0, "Nenhum user agent encontrado." + (f" Erros: {', '.join(errors)}" if errors else "");
 
-    ua_file.parent.mkdir(parents=True, exist_ok=True);
-    ua_file.write_text("\n".join(unique) + "\n", encoding="utf-8");
+    path.parent.mkdir(parents=True, exist_ok=True);
+    path.write_text("\n".join(unique) + "\n", encoding="utf-8");
 
     msg = f"{len(unique)} user agents atualizados.";
     if errors:

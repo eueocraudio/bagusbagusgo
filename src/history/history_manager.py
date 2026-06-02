@@ -5,9 +5,9 @@ from ..utils.constants import HISTORY_MAX;
 
 
 class HistoryManager:
-    def __init__(self, data_dir: Path):
-        self._file = data_dir / "history.json";
-        data_dir.mkdir(parents=True, exist_ok=True);
+    def __init__(self, base_dir: Path):
+        self._file = base_dir / "history.json";
+        base_dir.mkdir(parents=True, exist_ok=True);
         self._entries: list[dict] = self._load();
 
     def _load(self) -> list[dict]:

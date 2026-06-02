@@ -1,7 +1,7 @@
 import os;
 from pathlib import Path;
 
-_PROJECT_DIR = Path(__file__).parent.parent.parent;
+_ROOT = Path(__file__).parent.parent.parent;
 _INSTALL_DIR = Path.home() / ".local" / "bin" / "bagus";
 _SHELL_VARS  = frozenset(os.environ.keys());  # vars set before any .env is loaded
 
@@ -19,7 +19,7 @@ def _load_file(path: Path):
 
 def load(base_dir: Path = None):
     sources = [
-        _PROJECT_DIR / ".env",      # nível 1 — diretório do projeto/source
+        _ROOT / ".env",             # nível 1 — diretório do projeto/source
         Path.home() / ".env",       # nível 2 — usuário global
         _INSTALL_DIR / ".env",      # nível 3 — instalação
     ];

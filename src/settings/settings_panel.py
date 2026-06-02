@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QObject, QEvent;
 from ..privacy.ua_updater import update as ua_update, _UA_FILE;
 from ..privacy.ads_updater import update as ads_update;
-from ..privacy.ad_blocker import PERSONAL_FILE as _ADS_FILE, WEB_FILE as _ADS_WEB_FILE;
+from ..privacy.ad_blocker import _PERSONAL_FILE as _ADS_FILE, _WEB_FILE as _ADS_WEB_FILE;
 from . import websettings_manager as _wsm;
 
 _ROOT = Path(__file__).parent.parent.parent;

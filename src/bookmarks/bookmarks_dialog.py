@@ -9,7 +9,7 @@ from .bookmark_manager import BookmarkManager;
 class ManageBookmarksDialog(QDialog):
     def __init__(self, manager: BookmarkManager, parent=None):
         super().__init__(parent);
-        self.manager = manager;
+        self._manager = manager;
         self.setWindowTitle("Gerenciar favoritos");
         self.setMinimumSize(480, 360);
         self._build_ui();
@@ -37,7 +37,7 @@ class ManageBookmarksDialog(QDialog):
 
     def _populate(self):
         self.list_widget.clear();
-        for b in self.manager.all():
+        for b in self._manager.all():
             item = QListWidgetItem(f"{b['title']}  —  {b['url']}");
             item.setData(Qt.UserRole, b["url"]);
             self.list_widget.addItem(item);
@@ -47,15 +47,15 @@ class ManageBookmarksDialog(QDialog):
         if not item:
             return;
         url = item.data(Qt.UserRole);
-        current_title = next(b["title"] for b in self.manager.all() if b["url"] == url);
+        current_title = next(b["title"] for b in self._manager.all() if b["url"] == url);
         new_title, ok = QInputDialog.getText(self, "Renomear", "Novo nome:", text=current_title);
         if ok and new_title.strip():
-            self.manager.rename(url, new_title.strip());
+            self._manager.rename(url, new_title.strip());
             self._populate();
 
     def _remove(self):
         item = self.list_widget.currentItem();
         if not item:
             return;
-        self.manager.remove(item.data(Qt.UserRole));
+        self._manager.remove(item.data(Qt.UserRole));
         self._populate();

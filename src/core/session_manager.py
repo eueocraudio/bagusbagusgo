@@ -3,9 +3,9 @@ from pathlib import Path;
 
 
 class SessionManager:
-    def __init__(self, data_dir: Path):
-        self._file = data_dir / "session.json";
-        data_dir.mkdir(parents=True, exist_ok=True);
+    def __init__(self, base_dir: Path):
+        self._file = base_dir / "session.json";
+        base_dir.mkdir(parents=True, exist_ok=True);
 
     def save(self, urls: list[str]):
         valid = [u for u in urls if u and u != "about:blank"];

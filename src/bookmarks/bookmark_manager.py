@@ -3,9 +3,9 @@ from pathlib import Path;
 
 
 class BookmarkManager:
-    def __init__(self, data_dir: Path):
-        self._file = data_dir / "bookmarks.json";
-        data_dir.mkdir(parents=True, exist_ok=True);
+    def __init__(self, base_dir: Path):
+        self._file = base_dir / "bookmarks.json";
+        base_dir.mkdir(parents=True, exist_ok=True);
         self._bookmarks: list[dict] = self._load();
 
     def _load(self) -> list[dict]:

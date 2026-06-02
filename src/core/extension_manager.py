@@ -2,7 +2,8 @@ from pathlib import Path;
 from PySide6.QtWebEngineCore import QWebEngineProfile;
 from ..settings.env_config import get_bool;
 
-_EXTENSIONS_DIR = Path(__file__).parent.parent.parent / "data" / "extensions";
+_ROOT = Path(__file__).parent.parent.parent;
+_EXTENSIONS_DIR = _ROOT / "data" / "extensions";
 
 _TOGGLES: dict[str, str] = {
     "uBlock0.chromium": "UBLOCK_ENABLED",

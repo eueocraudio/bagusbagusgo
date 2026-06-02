@@ -1,9 +1,10 @@
 import urllib.request;
 from pathlib import Path;
 
-_WEB_FILE = Path(__file__).parent.parent.parent / "data" / "ad_selectors_web.txt";
+_ROOT = Path(__file__).parent.parent.parent;
+_WEB_FILE = _ROOT / "data" / "ad_selectors_web.txt";
 _LOCAL_EASYLIST = (
-    Path(__file__).parent.parent.parent
+    _ROOT
     / "data" / "extensions" / "uBlock0.chromium"
     / "assets" / "thirdparties" / "easylist" / "easylist.txt"
 );
@@ -40,7 +41,7 @@ def _fetch_local() -> tuple[list[str], str]:
     return _parse_selectors(_LOCAL_EASYLIST.read_text(encoding="utf-8", errors="ignore")), "bundled local";
 
 
-def update(web_file: Path = _WEB_FILE) -> tuple[int, str]:
+def update(path: Path = _WEB_FILE) -> tuple[int, str]:
     selectors, source = [], "";
     try:
         selectors, source = _fetch_web();
@@ -54,8 +55,8 @@ def update(web_file: Path = _WEB_FILE) -> tuple[int, str]:
         return 0, "Nenhum seletor encontrado.";
 
     unique = list(dict.fromkeys(selectors));
-    web_file.parent.mkdir(parents=True, exist_ok=True);
-    web_file.write_text("\n".join(unique) + "\n", encoding="utf-8");
+    path.parent.mkdir(parents=True, exist_ok=True);
+    path.write_text("\n".join(unique) + "\n", encoding="utf-8");
     return len(unique), f"{len(unique)} seletores atualizados (fonte: {source}).";
 
 

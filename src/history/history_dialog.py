@@ -13,7 +13,7 @@ class HistoryDialog(QDialog):
 
     def __init__(self, manager: HistoryManager, parent=None):
         super().__init__(parent);
-        self.manager = manager;
+        self._manager = manager;
         self.setWindowTitle("Histórico de navegação");
         self.setMinimumSize(560, 460);
         self._build_ui();
@@ -50,7 +50,7 @@ class HistoryDialog(QDialog):
 
     def _populate(self, query: str = ""):
         self.list_widget.clear();
-        entries = self.manager.search(query) if query else self.manager.all();
+        entries = self._manager.search(query) if query else self._manager.all();
         last_group = None;
         today = date.today();
         yesterday = today - timedelta(days=1);
@@ -86,7 +86,7 @@ class HistoryDialog(QDialog):
         if not item or not item.data(Qt.UserRole):
             return;
         visited_at, _ = item.data(Qt.UserRole);
-        self.manager.remove(visited_at);
+        self._manager.remove(visited_at);
         self._populate(self.search_bar.text());
 
     def _clear_all(self):
@@ -96,5 +96,5 @@ class HistoryDialog(QDialog):
             QMessageBox.Yes | QMessageBox.No,
         );
         if resp == QMessageBox.Yes:
-            self.manager.clear();
+            self._manager.clear();
             self._populate(self.search_bar.text());
