@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # BagusBagusGo (BBGo) — instruções para o Claude
 
 ## Versão atual
@@ -15,24 +19,42 @@ Entry point: `run.py`. Toda a lógica de UI está em `src/main_window.py`.
 # Diretório temporário gerado em /tmp/
 python3 run.py
 
-# Diretório específico
+# Diretório específico (dados persistem entre execuções)
 python3 run.py /caminho/do/diretorio
 ```
 
 `sys.argv` é passado explicitamente: `run.py` → `main(sys.argv)` → `QApplication(args)`.
 
+Log gerado em `<base_dir>/bagusbagusgo.log`. O `stdout`/`stderr` são redirecionados para o logger (`src/logger.py`).
+
+## Instalação
+
+```bash
+sudo bash install.sh
+```
+
+Instala PySide6, copia arquivos para `~/.local/bin/bagus/`, registra o `.desktop` e cria o comando `bagus`.
+
 ## Estrutura de arquivos
 
 ```
 run.py                      — entry point; passa sys.argv para main()
+bagus                       — launcher shell (usado após instalação)
 data/
   user_agents.txt           — lista de user agents (um por linha)
+  ad_selectors.txt          — seletores CSS para bloqueio de anúncios
+  extensions/
+    uBlock0.chromium/       — extensão uBlock Origin estática
 src/
-  browser.py                — main(args): lê args, aplica tema, inicia MainWindow
+  browser.py                — main(args): lê args, aplica flags Chromium, inicia MainWindow
   constants.py              — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_DATA_DIR
   theme.py                  — DARK_STYLESHEET (dark + vermelho)
+  env_config.py             — carrega .env; get_bool(key, default)
+  logger.py                 — setup(base_dir): redireciona stdout/stderr para arquivo de log
   user_agent.py             — random_user_agent(), navigator_spoof_script(ua)
   request_interceptor.py    — UserAgentInterceptor (interceptor HTTP por domínio)
+  ad_blocker.py             — build_ad_block_js(): JS baseado em data/ad_selectors.txt
+  extension_manager.py      — load_extensions(profile): carrega extensões de data/extensions/
   session_manager.py        — SessionManager: salva/restaura URLs das abas
   bookmark_manager.py       — BookmarkManager (CRUD JSON)
   bookmarks_dialog.py       — ManageBookmarksDialog
@@ -45,8 +67,23 @@ src/
   myass/
     __init__.py
     panel.py                — MyAssPanel (barra de botões + tabela 4 colunas)
-install.sh                  — instala dependências via pip3
+install.sh                  — instala dependências e registra o app (requer sudo)
+resources/
+  bagus.desktop             — arquivo .desktop para o menu de aplicativos
+  bagus.png                 — ícone do app
 ```
+
+## Configuração via `.env`
+
+O arquivo `.env` na raiz do projeto é carregado automaticamente por `src/env_config.py` antes de qualquer outra inicialização. Variáveis disponíveis:
+
+Carregamento em 4 níveis (cada um sobrescreve o anterior): `.env` do projeto → `~/.env` → `~/.local/bin/bagus/.env` → `<base_dir>/.env`.
+
+| Variável | Padrão | Efeito |
+|---|---|---|
+| `WEBGL_FORCE=true` | `false` | Força WebGL/GPU via flags Chromium |
+| `UBLOCK_ENABLED=false` | `true` | Desativa o carregamento do uBlock Origin |
+| `AD_BLOCKER_ENABLED=true` | `false` | Ativa o bloqueador CSS (`data/ad_selectors.txt`) |
 
 ## Dados gerados em runtime
 
@@ -57,6 +94,9 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 | `<base_dir>/bookmarks.json` | Favoritos |
 | `<base_dir>/history.json`   | Histórico de navegação |
 | `<base_dir>/session.json`   | URLs das abas para restauração |
+| `<base_dir>/bagusbagusgo.log` | Log unificado (stdout + stderr) |
+| `<base_dir>/storage/`       | Dados persistentes do QWebEngineProfile (cookies, localStorage) |
+| `<base_dir>/cache/`         | Cache HTTP do QWebEngineProfile |
 | `<base_dir>/downloads/`     | Arquivos baixados |
 
 ## Arquitetura — classes principais
@@ -78,6 +118,8 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 | `random_user_agent()` | Lê `data/user_agents.txt` e retorna UA aleatório |
 | `navigator_spoof_script(ua)` | Gera JS que sobrescreve `navigator.*` para mascarar QtWebEngine |
 | `UserAgentInterceptor` | Intercepta requisições HTTP por domínio (extensível) |
+| `build_ad_block_js()` | Gera JS que remove elementos por seletores de `data/ad_selectors.txt` |
+| `load_extensions(profile)` | Carrega extensões Chrome de `data/extensions/` via `QWebEngineExtensionManager` |
 
 ## Layout da janela
 
@@ -104,11 +146,13 @@ Aplicadas em `MainWindow._connect_downloads()`:
 |---|---|
 | `ForceDarkMode` | `True` |
 | `HttpUserAgent` | Aleatório a cada inicialização |
+| `PersistentCookiesPolicy` | `AllowPersistentCookies` |
 | `DownloadPath` | `<base_dir>/downloads/` |
 | `navigator_spoof` script | Injeta em `DocumentCreation` — sobrescreve `navigator.*`, `plugins`, `mimeTypes`, `window.chrome` |
 | `youtube_ad_skipper` script | Injeta em `DocumentReady` — pula propagandas automaticamente |
 | `ad_blocker` script | Injeta em `DocumentReady` — remove elementos por seletor CSS (requer `AD_BLOCKER_ENABLED=true`) |
 | `qwebchannel.js` | Injeta em `DocumentCreation` via `QWebEngineScript` |
+| Extensões | Carregadas via `load_extensions(profile)` de `data/extensions/` |
 
 ## Comportamentos automáticos por URL
 
@@ -147,3 +191,5 @@ if "site.com" in url:
 - Versão centralizada em `src/constants.py` — nunca hardcodar em outro lugar
 - User agents em `data/user_agents.txt` — um por linha
 - Tema em `src/theme.py` — editar `DARK_STYLESHEET` para mudar cores
+- Configuração de features via `.env` na raiz — nunca hardcodar flags de feature
+- Novas flags de ambiente: adicionar em `env_config.get_bool()` e documentar aqui

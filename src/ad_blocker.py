@@ -1,18 +1,29 @@
 import json;
 from pathlib import Path;
+from .env_config import get_bool;
 
-_SELECTORS_FILE = Path(__file__).parent.parent / "data" / "ad_selectors.txt";
+_PERSONAL_FILE = Path(__file__).parent.parent / "data" / "ad_selectors.txt";
+_WEB_FILE      = Path(__file__).parent.parent / "data" / "ad_selectors_web.txt";
+
+
+def _read(path: Path) -> list[str]:
+    if not path.exists():
+        return [];
+    result = [];
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip();
+        if line and not line.startswith("#"):
+            result.append(line);
+    return result;
 
 
 def _load_selectors() -> list[str]:
-    if not _SELECTORS_FILE.exists():
-        return [];
     selectors = [];
-    for line in _SELECTORS_FILE.read_text(encoding="utf-8").splitlines():
-        line = line.strip();
-        if line and not line.startswith("#"):
-            selectors.append(line);
-    return selectors;
+    if get_bool("AD_SELECTOR_PERSONAL_ENABLED", default=True):
+        selectors.extend(_read(_PERSONAL_FILE));
+    if get_bool("AD_SELECTOR_WEB_ENABLED", default=False):
+        selectors.extend(_read(_WEB_FILE));
+    return list(dict.fromkeys(selectors));
 
 
 def build_ad_block_js() -> str:

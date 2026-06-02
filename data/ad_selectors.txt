@@ -1,4 +1,3 @@
-# ── YouTube ────────────────────────────────────────────────────────────────
 .ytp-ad-overlay-container
 .ytp-ad-player-overlay
 .ytp-ad-player-overlay-instream-info
@@ -6,8 +5,6 @@
 .ytp-ad-progress-list
 .ytp-ad-text
 .ad-showing .ytp-cued-thumbnail-overlay
-#player-ads
-#masthead-ad
 ytd-banner-promo-renderer
 ytd-statement-banner-renderer
 ytd-ad-slot-renderer
@@ -24,8 +21,6 @@ ytd-player-legacy-desktop-watch-ads-renderer
 ytd-companion-slot-renderer
 .ytd-merch-shelf-renderer
 .ytd-donation-shelf-renderer
-
-# ── Genérico ───────────────────────────────────────────────────────────────
 ins.adsbygoogle
 [id^="google_ads"]
 [id^="div-gpt-ad"]
@@ -49,8 +44,5 @@ iframe[src*="amazon-adsystem"]
 .ad-placeholder
 .advertisement
 .advert
-#ad
-#ads
-#ad-container
 .popup-ad
 .overlay-ad

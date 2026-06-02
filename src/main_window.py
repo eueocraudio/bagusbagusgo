@@ -24,6 +24,8 @@ from .ad_blocker import build_ad_block_js;
 from .extension_manager import load_extensions;
 from .env_config import get_bool;
 from .myass.panel import MyAssPanel;
+from .settings_panel import SettingsPanel;
+from . import websettings_manager as _wsm;
 
 
 class MainWindow(QMainWindow):
@@ -31,6 +33,7 @@ class MainWindow(QMainWindow):
         super().__init__();
         self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}");
         self.setMinimumSize(1024, 700);
+        self._base_dir = base_dir;
         self._downloads_dir = base_dir / "downloads";
         self._downloads_dir.mkdir(parents=True, exist_ok=True);
         self._profile = QWebEngineProfile("bbgo", self);
@@ -42,6 +45,7 @@ class MainWindow(QMainWindow):
         self.bookmarks = BookmarkManager(base_dir);
         self.history = HistoryManager(base_dir);
         self.session = SessionManager(base_dir);
+        _wsm.apply(self._profile, _wsm.load(base_dir));
         self._build_ui();
         self._build_shortcuts();
         self._connect_downloads();
@@ -74,7 +78,6 @@ class MainWindow(QMainWindow):
     def _connect_downloads(self):
         profile = self._profile;
         load_extensions(profile);
-        profile.settings().setAttribute(QWebEngineSettings.WebAttribute.ForceDarkMode, True);
         ua = random_user_agent();
         if ua:
             profile.setHttpUserAgent(ua);
@@ -191,6 +194,12 @@ class MainWindow(QMainWindow):
         self.btn_downloads.clicked.connect(self._toggle_downloads_panel);
         nav_layout.addWidget(self.btn_downloads);
 
+        self.btn_translate = QPushButton("PT");
+        self.btn_translate.setFixedWidth(32);
+        self.btn_translate.setToolTip("Traduzir página para Português");
+        self.btn_translate.clicked.connect(self._translate_page);
+        nav_layout.addWidget(self.btn_translate);
+
         self.btn_new_tab = QPushButton("+");
         self.btn_new_tab.setFixedWidth(32);
         self.btn_new_tab.clicked.connect(lambda: self.add_tab());
@@ -245,6 +254,7 @@ class MainWindow(QMainWindow):
         self.outer_tabs.addTab(QWidget(), "Anonymity");
         self.outer_tabs.addTab(QWidget(), "AutoBot");
         self.outer_tabs.addTab(QWidget(), "Downloads");
+        self.outer_tabs.addTab(SettingsPanel(self._base_dir, self._profile), "Settings");
         self.setCentralWidget(self.outer_tabs);
 
         # --- painel de downloads ---
@@ -365,6 +375,14 @@ class MainWindow(QMainWindow):
         dlg = HistoryDialog(self.history, self);
         dlg.url_requested.connect(lambda u: self._current_view().load(QUrl(u)));
         dlg.exec();
+
+    def _translate_page(self):
+        url = self._current_view().url().toString();
+        if not url or url == "about:blank":
+            return;
+        encoded = QUrl.toPercentEncoding(url).data().decode();
+        translate_url = f"https://translate.google.com/translate?hl=pt-BR&sl=en&tl=pt&u={encoded}";
+        self._current_view().load(QUrl(translate_url));
 
     def _toggle_downloads_panel(self):
         if self.download_panel.isVisible():

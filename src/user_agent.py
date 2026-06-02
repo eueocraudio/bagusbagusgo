@@ -12,7 +12,7 @@ def random_user_agent() -> str:
     _MOBILE = ("Mobile", "Android", "iPhone", "iPad");
     agents = [
         line.strip() for line in _UA_FILE.read_text().splitlines()
-        if line.strip() and not any(m in line for m in _MOBILE)
+        if line.strip() and not line.strip().startswith("#") and not any(m in line for m in _MOBILE)
     ];
     return random.choice(agents) if agents else "";
 

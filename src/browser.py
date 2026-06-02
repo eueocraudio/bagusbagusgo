@@ -4,7 +4,6 @@ import tempfile;
 from pathlib import Path;
 from PySide6.QtWidgets import QApplication;
 from . import env_config as _env;
-_env.load();
 from .main_window import MainWindow;
 from .theme import DARK_STYLESHEET;
 from .constants import APP_NAME, APP_VERSION, APP_ID;
@@ -35,6 +34,7 @@ def main(args: list[str] = None):
         base_dir.mkdir(parents=True, exist_ok=True);
     else:
         base_dir = Path(tempfile.mkdtemp(prefix="bagusbagusgo_", dir="/tmp"));
+    _env.load(base_dir);
     _apply_chromium_flags();
     _logger_mod.setup(base_dir);
     print(f"[{APP_ID} v{APP_VERSION}] diretório de dados: {base_dir}");
@@ -42,6 +42,15 @@ def main(args: list[str] = None):
     app.setApplicationName(APP_NAME);
     app.setApplicationVersion(APP_VERSION);
     app.setStyleSheet(DARK_STYLESHEET);
+    try:
+        zoom = int(os.environ.get("ZOOM", "1"));
+    except ValueError:
+        zoom = 1;
+    if zoom > 0:
+        font = app.font();
+        font.setPointSize(font.pointSize() + zoom);
+        app.setFont(font);
+        print(f"[{APP_ID}] ZOOM={zoom} — fonte: {font.pointSize()}pt");
     window = MainWindow(base_dir);
     window.show();
     sys.exit(app.exec());
