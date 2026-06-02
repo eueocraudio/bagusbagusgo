@@ -40,36 +40,54 @@ Instala PySide6, copia arquivos para `~/.local/bin/bagus/`, registra o `.desktop
 
 ## Estrutura de arquivos
 
+O código em `src/` é organizado em subpacotes por domínio (cada um com `__init__.py`). Imports usam caminhos relativos ao pacote (ex.: `from .settings import env_config`, `from ..utils.constants import ...`).
+
 ```
 run.py                      — entry point; passa sys.argv para main()
 bagus                       — launcher shell (usado após instalação)
+requirements.txt            — dependências (PySide6)
+.env / .env.example         — config de features (ver seção .env)
 data/
   user_agents.txt           — lista de user agents (um por linha)
-  ad_selectors.txt          — seletores CSS para bloqueio de anúncios
+  ad_selectors.txt          — seletores CSS pessoais (lista local)
+  ad_selectors_web.txt      — seletores CSS baixados da internet (via Update)
   extensions/
     uBlock0.chromium/       — extensão uBlock Origin estática
 src/
-  browser.py                — main(args): lê args, aplica flags Chromium, inicia MainWindow
-  constants.py              — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_DATA_DIR
-  theme.py                  — DARK_STYLESHEET (dark + vermelho)
-  env_config.py             — carrega .env; get_bool(key, default)
-  logger.py                 — setup(base_dir): logger do app (bbgo) + logger web (bbgo.web); web_logger()
-  user_agent.py             — random_user_agent(), navigator_spoof_script(ua)
-  request_interceptor.py    — UserAgentInterceptor (interceptor HTTP por domínio)
-  ad_blocker.py             — build_ad_block_js(): JS baseado em data/ad_selectors.txt
-  extension_manager.py      — load_extensions(profile): carrega extensões de data/extensions/
-  session_manager.py        — SessionManager: salva/restaura URLs das abas
-  bookmark_manager.py       — BookmarkManager (CRUD JSON)
-  bookmarks_dialog.py       — ManageBookmarksDialog
-  history_manager.py        — HistoryManager (registro e busca, máx. 5000)
-  history_dialog.py         — HistoryDialog
-  download_panel.py         — DownloadItemWidget + DownloadPanel
-  click_capture.py          — ClickCapture + CLICK_LISTENER_JS
-  browser_tab.py            — BrowserTab (recebe add_tab como callback)
+  browser.py                — main(args): lê args, carrega .env, aplica flags Chromium/ZOOM, inicia MainWindow
   main_window.py            — MainWindow (orquestra tudo)
+  utils/
+    constants.py            — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_DATA_DIR, DEFAULT_HOME_URL
+    theme.py                — DARK_STYLESHEET (dark + vermelho)
+    logger.py               — setup(base_dir): logger do app (bbgo) + logger web (bbgo.web); web_logger()
+  core/
+    browser_tab.py          — BrowserTab (QWebEngineView, recebe add_tab como callback) + LoggingWebEnginePage
+    click_capture.py        — ClickCapture + CLICK_LISTENER_JS
+    session_manager.py      — SessionManager: salva/restaura URLs das abas
+    zoom_manager.py         — ZoomManager: zoom da página web por host (zoom.json)
+    extension_manager.py    — load_extensions(profile): carrega extensões de data/extensions/
+    request_interceptor.py  — UserAgentInterceptor (interceptor HTTP por domínio)
+  privacy/
+    user_agent.py           — random_user_agent(), navigator_spoof_script(ua)
+    ad_blocker.py           — build_ad_block_js(): JS das listas pessoal + web
+    ads_updater.py          — update(): baixa/atualiza data/ad_selectors_web.txt
+    ua_updater.py           — update(): baixa/atualiza data/user_agents.txt
+  bookmarks/
+    bookmark_manager.py     — BookmarkManager (CRUD JSON)
+    bookmarks_dialog.py     — ManageBookmarksDialog
+  history/
+    history_manager.py      — HistoryManager (registro e busca, máx. 5000)
+    history_dialog.py       — HistoryDialog
+  downloads/
+    download_panel.py       — DownloadItemWidget + DownloadPanel
+  settings/
+    env_config.py           — carrega .env (4 níveis); get_bool(key, default), get_str(key, default)
+    settings_panel.py       — SettingsPanel (aba Settings: Geral, Ad Selectors, WebSettings...)
+    websettings_manager.py  — aplica/persiste QWebEngineSettings no profile (websettings.json)
   myass/
-    __init__.py
     panel.py                — MyAssPanel (barra de botões + tabela 4 colunas)
+  ai/
+    panel.py                — AIPanel
 install.sh                  — instala dependências e registra o app (requer sudo)
 resources/
   bagus.desktop             — arquivo .desktop para o menu de aplicativos
@@ -78,15 +96,16 @@ resources/
 
 ## Configuração via `.env`
 
-O arquivo `.env` na raiz do projeto é carregado automaticamente por `src/env_config.py` antes de qualquer outra inicialização. Variáveis disponíveis:
-
-Carregamento em 4 níveis (cada um sobrescreve o anterior): `.env` do projeto → `~/.env` → `~/.local/bin/bagus/.env` → `<base_dir>/.env`.
+O arquivo `.env` é carregado automaticamente por `src/settings/env_config.py` antes de qualquer outra inicialização. Carregamento em 4 níveis (cada um sobrescreve o anterior): `.env` do projeto → `~/.env` → `~/.local/bin/bagus/.env` → `<base_dir>/.env`. **Variáveis exportadas no shell sempre vencem** (`_SHELL_VARS`). Variáveis disponíveis:
 
 | Variável | Padrão | Efeito |
 |---|---|---|
 | `WEBGL_FORCE=true` | `false` | Força WebGL/GPU via flags Chromium |
 | `UBLOCK_ENABLED=false` | `true` | Desativa o carregamento do uBlock Origin |
-| `AD_BLOCKER_ENABLED=true` | `false` | Ativa o bloqueador CSS (`data/ad_selectors.txt`) |
+| `AD_BLOCKER_ENABLED=true` | `false` | Ativa o bloqueador CSS por seletores |
+| `AD_SELECTOR_PERSONAL_ENABLED=false` | `true` | Usa a lista pessoal (`data/ad_selectors.txt`) |
+| `AD_SELECTOR_WEB_ENABLED=true` | `false` | Usa a lista baixada da internet (`data/ad_selectors_web.txt`) |
+| `ZOOM=<int>` | `1` | Incremento (em pt) na fonte de todos os widgets; `0` = padrão do sistema |
 | `HOME_URL=<url>` | `https://duckduckgo.com` | Página inicial: nova aba, botão ⌂ e restauração de sessão vazia. Editável na aba **Geral** do Settings. Lida via `env_config.get_str()`; padrão em `constants.DEFAULT_HOME_URL` |
 
 ## Dados gerados em runtime
@@ -98,6 +117,8 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 | `<base_dir>/bookmarks.json` | Favoritos |
 | `<base_dir>/history.json`   | Histórico de navegação |
 | `<base_dir>/session.json`   | URLs das abas para restauração |
+| `<base_dir>/zoom.json`      | Fator de zoom da página web por host (restaurado ao revisitar) |
+| `<base_dir>/websettings.json` | Overrides de `QWebEngineSettings` (aba WebSettings) |
 | `<base_dir>/bagusbagusgo.log` | Log do app (stdout + stderr) |
 | `<base_dir>/webengine.log` | Log de conteúdo web (console JS, CORS, etc.) |
 | `<base_dir>/storage/`       | Dados persistentes do QWebEngineProfile (cookies, localStorage) |
@@ -113,17 +134,22 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 | `HistoryManager` | Registro e busca de histórico |
 | `HistoryDialog` | Diálogo com busca, agrupamento por data e limpeza |
 | `SessionManager` | Salva URLs no `closeEvent`; restaura na inicialização |
+| `ZoomManager` | Persiste o fator de zoom da página por host em `zoom.json`; reaplica em `_on_load_finished` |
 | `ClickCapture` | `QObject` com `@Slot` — recebe cliques via `QWebChannel` → `print()` |
 | `DownloadItemWidget` | Widget de progresso por arquivo baixado |
 | `DownloadPanel` | `QDockWidget` inferior com lista de downloads |
 | `BrowserTab` | `QWebEngineView`; recebe `add_tab` como callback |
 | `MainWindow` | Janela principal — orquestra tudo |
 | `MyAssPanel` | Painel da aba MyAss: barra de botões (New work, New flow) + tabela Work/Flow/Status/Date |
+| `AIPanel` | Painel da aba AI |
+| `SettingsPanel` | Aba Settings: sub-abas Geral (HOME_URL), Ad Selectors, WebSettings; aciona os updaters em thread |
+| `websettings_manager` | Carrega/aplica/persiste overrides de `QWebEngineSettings` em `websettings.json` |
 | `DARK_STYLESHEET` | Stylesheet global dark + vermelho aplicado no `QApplication` |
 | `random_user_agent()` | Lê `data/user_agents.txt` e retorna UA aleatório |
 | `navigator_spoof_script(ua)` | Gera JS que sobrescreve `navigator.*` para mascarar QtWebEngine |
 | `UserAgentInterceptor` | Intercepta requisições HTTP por domínio (extensível) |
-| `build_ad_block_js()` | Gera JS que remove elementos por seletores de `data/ad_selectors.txt` |
+| `build_ad_block_js()` | Gera JS que remove elementos pelas listas pessoal/web de seletores |
+| `ads_updater.update()` / `ua_updater.update()` | Baixam/atualizam `ad_selectors_web.txt` e `user_agents.txt` |
 | `load_extensions(profile)` | Carrega extensões Chrome de `data/extensions/` via `QWebEngineExtensionManager` |
 
 ## Layout da janela
@@ -187,7 +213,8 @@ if "site.com" in url:
 
 ## Regras de desenvolvimento
 
-- Todo código novo vai em `src/`
+- Todo código novo vai em `src/`, dentro do subpacote de domínio adequado (`core`, `privacy`, `bookmarks`, `history`, `downloads`, `settings`, `utils`, `myass`, `ai`) — criar novo subpacote (com `__init__.py`) se nenhum couber
+- Usar imports relativos ao pacote (`from ..utils.constants import ...`), nunca caminhos absolutos com `src.`
 - Usar PySide6 para qualquer elemento de interface
 - Terminar instruções Python com `;`
 - Usar 4 espaços para indentação (nunca TAB)
@@ -195,8 +222,8 @@ if "site.com" in url:
 - Motor de busca: DuckDuckGo (`https://duckduckgo.com/?q=`)
 - `BrowserTab` recebe `add_tab` como callback — não importa `MainWindow`
 - Barras de navegação/favoritos são `QWidget` + `QHBoxLayout`, não `QToolBar`
-- Versão centralizada em `src/constants.py` — nunca hardcodar em outro lugar
+- Versão centralizada em `src/utils/constants.py` — nunca hardcodar em outro lugar
 - User agents em `data/user_agents.txt` — um por linha
-- Tema em `src/theme.py` — editar `DARK_STYLESHEET` para mudar cores
+- Tema em `src/utils/theme.py` — editar `DARK_STYLESHEET` para mudar cores
 - Configuração de features via `.env` na raiz — nunca hardcodar flags de feature
-- Novas flags de ambiente: adicionar em `env_config.get_bool()` e documentar aqui
+- Novas flags de ambiente: adicionar em `src/settings/env_config.py` (`get_bool()`/`get_str()`) e documentar na tabela `.env` acima

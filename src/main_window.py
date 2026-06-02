@@ -20,6 +20,7 @@ from .core.click_capture import ClickCapture, CLICK_LISTENER_JS;
 from .core.browser_tab import BrowserTab;
 from .privacy.user_agent import random_user_agent, navigator_spoof_script;
 from .core.session_manager import SessionManager;
+from .core.zoom_manager import ZoomManager, DEFAULT_ZOOM, ZOOM_STEP;
 from .privacy.ad_blocker import build_ad_block_js;
 from .core.extension_manager import load_extensions;
 from .settings.env_config import get_bool, get_str;
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
         self.bookmarks = BookmarkManager(base_dir);
         self.history = HistoryManager(base_dir);
         self.session = SessionManager(base_dir);
+        self.zoom = ZoomManager(base_dir);
         _wsm.apply(self._profile, _wsm.load(base_dir));
         self._build_ui();
         self._build_shortcuts();
@@ -303,6 +305,10 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Alt+Right"), self).activated.connect(
             lambda: self._current_view().forward()
         );
+        QShortcut(QKeySequence("Ctrl++"), self).activated.connect(self._zoom_in);
+        QShortcut(QKeySequence("Ctrl+="), self).activated.connect(self._zoom_in);
+        QShortcut(QKeySequence("Ctrl+-"), self).activated.connect(self._zoom_out);
+        QShortcut(QKeySequence("Ctrl+0"), self).activated.connect(self._zoom_reset);
 
     def add_tab(self, url: QUrl = None) -> BrowserTab:
         view = BrowserTab(self.add_tab, self._profile, self.tabs);
@@ -354,6 +360,28 @@ class MainWindow(QMainWindow):
 
     def _go_home(self):
         self._current_view().load(QUrl(self._home_url));
+
+    def _zoom_in(self):
+        self._apply_zoom_delta(ZOOM_STEP);
+
+    def _zoom_out(self):
+        self._apply_zoom_delta(-ZOOM_STEP);
+
+    def _zoom_reset(self):
+        self._set_zoom(DEFAULT_ZOOM);
+
+    def _apply_zoom_delta(self, delta: float):
+        view = self._current_view();
+        if isinstance(view, BrowserTab):
+            self._set_zoom(view.zoomFactor() + delta);
+
+    def _set_zoom(self, factor: float):
+        view = self._current_view();
+        if not isinstance(view, BrowserTab):
+            return;
+        view.setZoomFactor(factor);
+        self.zoom.set(view.url().toString(), view.zoomFactor());
+        self.status_bar.showMessage(f"Zoom: {int(round(view.zoomFactor() * 100))}%", 1500);
 
     def _toggle_bookmark(self):
         view = self._current_view();
@@ -428,6 +456,7 @@ class MainWindow(QMainWindow):
         url = view.url().toString();
         if url and url != "about:blank":
             self.history.record(view.title() or url, url);
+        view.setZoomFactor(self.zoom.get(url));
         view.page().runJavaScript(CLICK_LISTENER_JS);
         if "translate.google" in url or "translate.goog" in url:
             view.page().runJavaScript("""

@@ -195,6 +195,9 @@ if "site.com" in url:
 | Ctrl+D | Adicionar / remover favorito |
 | Ctrl+H | Abrir histórico |
 | Ctrl+J | Abrir / fechar painel de downloads |
+| Ctrl++ | Aumentar zoom da página |
+| Ctrl+- | Diminuir zoom da página |
+| Ctrl+0 | Restaurar zoom (100%) |
 | F5 | Recarregar / parar |
 | Alt+← | Voltar |
 | Alt+→ | Avançar |
@@ -222,6 +225,7 @@ if "site.com" in url:
 | `<base_dir>/bookmarks.json` | Favoritos |
 | `<base_dir>/history.json` | Histórico (máx. 5000 entradas) |
 | `<base_dir>/session.json` | URLs das abas (restauração) |
+| `<base_dir>/zoom.json` | Zoom da página web por site (restaurado ao revisitar) |
 | `<base_dir>/downloads/` | Arquivos baixados |
 | `<base_dir>/bagusbagusgo.log` | Log do app (stdout + stderr) |
 | `<base_dir>/webengine.log` | Log de conteúdo web (console JS, CORS, etc.) |
@@ -247,6 +251,7 @@ src/
     browser_tab.py          — BrowserTab (QWebEngineView)
     click_capture.py        — captura de cliques via QWebChannel
     session_manager.py      — salva/restaura sessão
+    zoom_manager.py         — zoom da página web por host (zoom.json)
     extension_manager.py    — carrega extensões de data/extensions/
     request_interceptor.py  — interceptor HTTP por domínio (extensível)
   privacy/
