@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=BAGUS
+GenericName=BAGUS
+Comment=BAGUS
+Categories=Other;Network;Security;
+Exec=python3 /opt/bagus/run.py
+Icon=/opt/bagus/resources/bagus.png
+StartupWMClass=BAGUS +
