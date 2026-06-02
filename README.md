@@ -220,6 +220,8 @@ if "site.com" in url:
 | `<base_dir>/history.json` | Histórico (máx. 5000 entradas) |
 | `<base_dir>/session.json` | URLs das abas (restauração) |
 | `<base_dir>/downloads/` | Arquivos baixados |
+| `<base_dir>/bagusbagusgo.log` | Log do app (stdout + stderr) |
+| `<base_dir>/webengine.log` | Log de conteúdo web (console JS, CORS, etc.) |
 
 ---
 
@@ -237,7 +239,7 @@ src/
   utils/
     constants.py            — APP_NAME, APP_VERSION, APP_ID e constantes globais
     theme.py                — DARK_STYLESHEET (tema dark + vermelho)
-    logger.py               — redireciona stdout/stderr para arquivo de log
+    logger.py               — logger do app (bbgo) + logger web (bbgo.web); web_logger()
   core/
     browser_tab.py          — BrowserTab (QWebEngineView)
     click_capture.py        — captura de cliques via QWebChannel

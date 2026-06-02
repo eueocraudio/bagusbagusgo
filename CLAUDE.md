@@ -25,7 +25,10 @@ python3 run.py /caminho/do/diretorio
 
 `sys.argv` é passado explicitamente: `run.py` → `main(sys.argv)` → `QApplication(args)`.
 
-Log gerado em `<base_dir>/bagusbagusgo.log`. O `stdout`/`stderr` são redirecionados para o logger (`src/logger.py`).
+Logs gerados em `<base_dir>/`. São **dois loggers segmentados por origem** (`src/utils/logger.py`):
+
+- `bagusbagusgo.log` — logger `bbgo`: eventos do app. `stdout`/`stderr` são redirecionados para cá; também ecoa no terminal.
+- `webengine.log` — logger `bbgo.web` (`propagate=False`, arquivo apenas): ruído de conteúdo web (console JS, CORS, etc.), capturado via `LoggingWebEnginePage.javaScriptConsoleMessage` em `src/core/browser_tab.py`. Acesse o logger com `logger.web_logger()`.
 
 ## Instalação
 
@@ -50,7 +53,7 @@ src/
   constants.py              — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_DATA_DIR
   theme.py                  — DARK_STYLESHEET (dark + vermelho)
   env_config.py             — carrega .env; get_bool(key, default)
-  logger.py                 — setup(base_dir): redireciona stdout/stderr para arquivo de log
+  logger.py                 — setup(base_dir): logger do app (bbgo) + logger web (bbgo.web); web_logger()
   user_agent.py             — random_user_agent(), navigator_spoof_script(ua)
   request_interceptor.py    — UserAgentInterceptor (interceptor HTTP por domínio)
   ad_blocker.py             — build_ad_block_js(): JS baseado em data/ad_selectors.txt
@@ -94,7 +97,8 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 | `<base_dir>/bookmarks.json` | Favoritos |
 | `<base_dir>/history.json`   | Histórico de navegação |
 | `<base_dir>/session.json`   | URLs das abas para restauração |
-| `<base_dir>/bagusbagusgo.log` | Log unificado (stdout + stderr) |
+| `<base_dir>/bagusbagusgo.log` | Log do app (stdout + stderr) |
+| `<base_dir>/webengine.log` | Log de conteúdo web (console JS, CORS, etc.) |
 | `<base_dir>/storage/`       | Dados persistentes do QWebEngineProfile (cookies, localStorage) |
 | `<base_dir>/cache/`         | Cache HTTP do QWebEngineProfile |
 | `<base_dir>/downloads/`     | Arquivos baixados |
