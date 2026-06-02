@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Versão atual
 
-**v2.0.3** — constantes em `src/constants.py` (`APP_NAME`, `APP_VERSION`, `APP_ID`).
+**v2.0.4** — constantes em `src/utils/constants.py` (`APP_NAME`, `APP_VERSION`, `APP_ID`).
 
 ## Visão geral
 
