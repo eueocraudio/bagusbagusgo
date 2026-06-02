@@ -1,4 +1,3 @@
-import threading;
 from pathlib import Path;
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -6,17 +5,15 @@ from PySide6.QtWidgets import (
     QTabWidget, QGroupBox, QMessageBox, QFrame,
     QGridLayout, QScrollArea,
 );
-from PySide6.QtCore import Qt, Signal, QObject, QEvent;
+from PySide6.QtCore import QEvent;
 from ..privacy.ua_updater import update as ua_update, _UA_FILE;
 from ..privacy.ads_updater import update as ads_update;
 from ..privacy.ad_blocker import _PERSONAL_FILE as _ADS_FILE, _WEB_FILE as _ADS_WEB_FILE;
 from ..utils.constants import DEFAULT_HOME_URL;
+from ..utils.tasks import run_async;
 from . import websettings_manager as _wsm;
 
 _ROOT = Path(__file__).parent.parent.parent;
-
-class _Worker(QObject):
-    done = Signal(int, str);
 
 
 _ENV_VARS = [
@@ -38,8 +35,6 @@ class _FileEditor(QWidget):
         layout.setContentsMargins(8, 8, 8, 8);
 
         if show_update_btn:
-            self._worker = _Worker();
-            self._worker.done.connect(self._on_update_done);
             top_bar = QHBoxLayout();
             self._btn_update = QPushButton("Update");
             self._btn_update.setFixedWidth(90);
@@ -79,10 +74,11 @@ class _FileEditor(QWidget):
     def _on_update(self):
         self._btn_update.setEnabled(False);
         self._btn_update.setText("...");
-        def _run():
-            count, msg = self._update_fn(self._path);
-            self._worker.done.emit(count, msg);
-        threading.Thread(target=_run, daemon=True).start();
+        run_async(
+            self._update_fn, self._path,
+            on_result=lambda r: self._on_update_done(r[0], r[1]),
+            on_error=lambda msg: self._on_update_done(0, f"Erro: {msg}"),
+        );
 
     def _on_update_done(self, count: int, msg: str):
         self._btn_update.setEnabled(True);

@@ -38,3 +38,10 @@ def get_bool(key: str, default: bool = False) -> bool:
 def get_str(key: str, default: str = "") -> str:
     val = os.environ.get(key, "").strip();
     return val if val else default;
+
+
+def get_int(key: str, default: int = 0) -> int:
+    try:
+        return int(os.environ.get(key, "").strip());
+    except (ValueError, TypeError):
+        return default;

@@ -1,5 +1,6 @@
 import json;
 from pathlib import Path;
+from ..utils.async_io import writer;
 
 
 class BookmarkManager:
@@ -17,7 +18,7 @@ class BookmarkManager:
         return [];
 
     def _save(self):
-        self._file.write_text(json.dumps(self._bookmarks, ensure_ascii=False, indent=2));
+        writer().write(self._file, self._bookmarks);
 
     def all(self) -> list[dict]:
         return list(self._bookmarks);

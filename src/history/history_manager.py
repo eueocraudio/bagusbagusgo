@@ -2,6 +2,7 @@ import json;
 from datetime import datetime;
 from pathlib import Path;
 from ..utils.constants import HISTORY_MAX;
+from ..utils.async_io import writer;
 
 
 class HistoryManager:
@@ -19,7 +20,7 @@ class HistoryManager:
         return [];
 
     def _save(self):
-        self._file.write_text(json.dumps(self._entries, ensure_ascii=False, indent=2));
+        writer().write(self._file, self._entries);
 
     def record(self, title: str, url: str):
         if not url or url == "about:blank":

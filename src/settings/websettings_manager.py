@@ -1,6 +1,7 @@
 import json;
 from pathlib import Path;
 from PySide6.QtWebEngineCore import QWebEngineSettings, QWebEngineProfile;
+from ..utils.async_io import writer;
 
 _FILENAME = "websettings.json";
 
@@ -66,7 +67,7 @@ def load(base_dir: Path) -> dict[str, bool]:
 
 def save(base_dir: Path, settings: dict[str, bool]):
     path = Path(base_dir) / _FILENAME;
-    path.write_text(json.dumps(settings, indent=2, ensure_ascii=False), encoding="utf-8");
+    writer().write(path, settings);
 
 
 def apply(profile: QWebEngineProfile, settings: dict[str, bool]):

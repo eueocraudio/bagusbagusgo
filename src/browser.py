@@ -22,6 +22,22 @@ def _apply_chromium_flags():
         print(f"[{APP_ID}] WebGL forçado (WEBGL_FORCE=true)");
     else:
         flags += ["--disable-webgl", "--disable-webgl2"];
+
+    if _env.get_bool("MULTITHREAD_ENABLED", default=True):
+        cpu = os.cpu_count() or 4;
+        raster = _env.get_int("CHROMIUM_RASTER_THREADS", default=min(cpu, 4));
+        features = ["ParallelDownloading", "CanvasOopRasterization"];
+        flags += [
+            "--site-per-process",                  # cada site em seu próprio render process (QWebPages em paralelo)
+            "--enable-gpu-rasterization",          # rasterização nas threads da GPU
+            "--enable-zero-copy",                  # upload de texturas sem cópia extra
+            f"--num-raster-threads={raster}",      # threads de rasterização (escala com CPU)
+            f"--enable-features={','.join(features)}",
+        ];
+        print(f"[{APP_ID}] multithreading Chromium habilitado (raster_threads={raster}, cpu={cpu})");
+    else:
+        print(f"[{APP_ID}] multithreading Chromium desabilitado (MULTITHREAD_ENABLED=false)");
+
     existing = os.environ.get("QTWEBENGINE_CHROMIUM_FLAGS", "");
     os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = (existing + " " + " ".join(flags)).strip();
 
@@ -52,7 +68,12 @@ def main(args: list[str] = None):
         app.setFont(font);
         print(f"[{APP_ID}] ZOOM={zoom} — fonte: {font.pointSize()}pt");
     window = MainWindow(base_dir);
-    window.show();
+    # redimensiona para a área útil da tela antes de exibir: garante janela cheia mesmo
+    # quando o gerenciador de janelas ignora o pedido de maximizar
+    screen = app.primaryScreen();
+    if screen is not None:
+        window.setGeometry(screen.availableGeometry());
+    window.showMaximized();
     sys.exit(app.exec());
 
 

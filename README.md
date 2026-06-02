@@ -1,6 +1,6 @@
 # BagusBagusGo (BBGo)
 
-**Versão: 2.0.4**  
+**Versão: 2.1.0**  
 Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
 Motor de busca padrão: **DuckDuckGo** · Tema: **Dark + Vermelho**.
 
@@ -41,9 +41,9 @@ python3 run.py
 python3 run.py /caminho/do/diretorio
 ```
 
-O caminho do diretório de dados é impresso no terminal:
+A janela abre **maximizada**. O caminho do diretório de dados é impresso no terminal:
 ```
-[BBGo v2.0.4] diretório de dados: /tmp/bagusbagusgo_abc123
+[BBGo v2.1.0] diretório de dados: /tmp/bagusbagusgo_abc123
 ```
 
 ---
@@ -68,7 +68,7 @@ Digite na barra de endereço e pressione **Enter**:
 | Trocar de aba | Clique na aba desejada |
 | Reordenar abas | Arraste a aba |
 
-Ao fechar uma aba com vídeo/áudio em reprodução, a mídia é pausada automaticamente.
+Ao fechar uma aba, a página é **destruída** (mídia, JavaScript, timers e rede são encerrados na hora) — vídeo/áudio param imediatamente, inclusive no YouTube.
 
 ---
 
@@ -134,26 +134,34 @@ A aba **Settings** (topo da janela) tem mais opções, na sub-aba **Geral**:
 
 ---
 
-### 9. Tema Dark
+### 9. Zoom por página
 
-Interface escura com acentos vermelhos (`src/theme.py`).  
+Ajuste o zoom da página com **Ctrl + scroll do mouse** ou com os atalhos **Ctrl+** / **Ctrl-** / **Ctrl+0** (restaura 100%).
+
+O zoom é **por página (URL)**: cada endereço guarda seu próprio fator em `zoom.json` e ele é **restaurado ao revisitar ou voltar** (back/forward), inclusive em páginas servidas do cache de navegação.
+
+---
+
+### 10. Tema Dark
+
+Interface escura com acentos vermelhos (`src/utils/theme.py`).  
 Páginas web também em dark mode via `QWebEngineSettings.ForceDarkMode`.
 
 ---
 
-### 10. User Agent aleatório
+### 11. User Agent aleatório
 
 A cada inicialização, um User Agent é sorteado de `data/user_agents.txt`:
 
 ```
-[BBGo v2.0.4] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
+[BBGo v2.1.0] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
 ```
 
 O `navigator.*`, `plugins`, `mimeTypes` e `window.chrome` são spoofados para mascarar o QtWebEngine.
 
 ---
 
-### 11. Pular propagandas no YouTube
+### 12. Pular propagandas no YouTube
 
 Ao acessar qualquer página do YouTube, um script roda a cada 500ms:
 - Clica automaticamente no botão "Pular" quando disponível
@@ -161,7 +169,7 @@ Ao acessar qualquer página do YouTube, um script roda a cada 500ms:
 
 ---
 
-### 12. Captura de cliques via Python
+### 13. Captura de cliques via Python
 
 Todo elemento clicado tem `tag`, `id` e `name` impressos no terminal:
 
@@ -172,7 +180,7 @@ Todo elemento clicado tem `tag`, `id` e `name` impressos no terminal:
 
 ---
 
-### 13. Injeção de JavaScript por URL
+### 14. Injeção de JavaScript por URL
 
 Em `src/main_window.py`, método `_on_load_finished`:
 
@@ -182,6 +190,25 @@ if "site.com" in url:
 ```
 
 **Regra ativa:** páginas do Google Tradutor (`translate.google` / `translate.goog`) têm a barra superior removida automaticamente para leitura limpa.
+
+---
+
+## Desempenho e multithreading
+
+O trabalho bloqueante fica fora da thread de UI:
+
+- **Gravações em disco** (favoritos, histórico, sessão, zoom, websettings) são feitas por uma thread dedicada (`utils/async_io.py`), com escrita atômica — a navegação não trava ao salvar.
+- **Tarefas de rede** (ex.: botão *Update* de user agents / seletores) rodam sobre um `QThreadPool` (`utils/tasks.py`); a atualização de user agents busca as fontes em paralelo.
+- **Chromium** recebe flags de paralelismo (cada site em seu próprio processo, rasterização em threads, downloads paralelos).
+
+Configurável via `.env`:
+
+| Variável | Padrão | Efeito |
+|---|---|---|
+| `MULTITHREAD_ENABLED` | `true` | Liga as flags de multithreading do Chromium (`site-per-process`, raster threads, `ParallelDownloading`) |
+| `CHROMIUM_RASTER_THREADS` | `min(cpu, 4)` | Nº de threads de rasterização do Chromium |
+
+> Em ambientes sem GPU real (VMs, alguns setups Qubes/Wayland) você pode definir `MULTITHREAD_ENABLED=false` se notar instabilidade.
 
 ---
 
@@ -195,8 +222,8 @@ if "site.com" in url:
 | Ctrl+D | Adicionar / remover favorito |
 | Ctrl+H | Abrir histórico |
 | Ctrl+J | Abrir / fechar painel de downloads |
-| Ctrl++ | Aumentar zoom da página |
-| Ctrl+- | Diminuir zoom da página |
+| Ctrl++ / Ctrl+scroll ↑ | Aumentar zoom da página |
+| Ctrl+- / Ctrl+scroll ↓ | Diminuir zoom da página |
 | Ctrl+0 | Restaurar zoom (100%) |
 | F5 | Recarregar / parar |
 | Alt+← | Voltar |
@@ -225,7 +252,8 @@ if "site.com" in url:
 | `<base_dir>/bookmarks.json` | Favoritos |
 | `<base_dir>/history.json` | Histórico (máx. 5000 entradas) |
 | `<base_dir>/session.json` | URLs das abas (restauração) |
-| `<base_dir>/zoom.json` | Zoom da página web por site (restaurado ao revisitar) |
+| `<base_dir>/zoom.json` | Zoom por página/URL (restaurado ao revisitar/voltar) |
+| `<base_dir>/websettings.json` | Overrides de `QWebEngineSettings` (aba Settings → Browser) |
 | `<base_dir>/downloads/` | Arquivos baixados |
 | `<base_dir>/bagusbagusgo.log` | Log do app (stdout + stderr) |
 | `<base_dir>/webengine.log` | Log de conteúdo web (console JS, CORS, etc.) |
@@ -247,11 +275,13 @@ src/
     constants.py            — APP_NAME, APP_VERSION, APP_ID e constantes globais
     theme.py                — DARK_STYLESHEET (tema dark + vermelho)
     logger.py               — logger do app (bbgo) + logger web (bbgo.web); web_logger()
+    tasks.py                — run_async(): executor sobre QThreadPool (resultado volta na thread de UI)
+    async_io.py             — writer(): grava JSON fora da thread de UI (coalescing + escrita atômica)
   core/
-    browser_tab.py          — BrowserTab (QWebEngineView)
+    browser_tab.py          — BrowserTab (QWebEngineView); Ctrl+scroll zoom via eventFilter no widget de render
     click_capture.py        — captura de cliques via QWebChannel
     session_manager.py      — salva/restaura sessão
-    zoom_manager.py         — zoom da página web por host (zoom.json)
+    zoom_manager.py         — zoom por página/URL (zoom.json)
     extension_manager.py    — carrega extensões de data/extensions/
     request_interceptor.py  — interceptor HTTP por domínio (extensível)
   privacy/
@@ -268,7 +298,7 @@ src/
   downloads/
     download_panel.py       — painel de downloads
   settings/
-    env_config.py           — carrega .env; get_bool(key, default)
+    env_config.py           — carrega .env; get_bool() / get_str() / get_int()
     settings_panel.py       — SettingsPanel (aba Settings)
     websettings_manager.py  — aplica QWebEngineSettings ao profile
   myass/

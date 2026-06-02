@@ -1,6 +1,7 @@
 import re;
 import urllib.request;
 from pathlib import Path;
+from concurrent.futures import ThreadPoolExecutor, as_completed;
 
 _ROOT = Path(__file__).parent.parent.parent;
 _UA_FILE = _ROOT / "data" / "user_agents.txt";
@@ -31,15 +32,18 @@ def _fetch(url: str) -> list[str]:
 def update(path: Path = _UA_FILE) -> tuple[int, str]:
     collected: list[str] = [];
     errors: list[str] = [];
-    for url in _SOURCES:
-        browser = url.split("/")[-1];
-        try:
-            uas = _fetch(url);
-            collected.extend(uas);
-            print(f"[ua_updater] {browser}: {len(uas)} UAs");
-        except Exception as e:
-            errors.append(browser);
-            print(f"[ua_updater] {browser}: erro — {e}");
+    # busca todas as fontes em paralelo — limitado por I/O de rede, não por CPU
+    with ThreadPoolExecutor(max_workers=len(_SOURCES)) as ex:
+        futures = {ex.submit(_fetch, url): url for url in _SOURCES};
+        for fut in as_completed(futures):
+            browser = futures[fut].split("/")[-1];
+            try:
+                uas = fut.result();
+                collected.extend(uas);
+                print(f"[ua_updater] {browser}: {len(uas)} UAs");
+            except Exception as e:
+                errors.append(browser);
+                print(f"[ua_updater] {browser}: erro — {e}");
 
     unique = list(dict.fromkeys(collected));
     if not unique:

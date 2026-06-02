@@ -28,6 +28,7 @@ from .myass.panel import MyAssPanel;
 from .ai.panel import AIPanel;
 from .settings.settings_panel import SettingsPanel;
 from .settings import websettings_manager as _wsm;
+from .utils.async_io import writer as _json_writer;
 
 
 class MainWindow(QMainWindow):
@@ -76,9 +77,9 @@ class MainWindow(QMainWindow):
         for i in range(self.tabs.count()):
             view = self.tabs.widget(i);
             if isinstance(view, BrowserTab):
-                view.setPage(None);
-                view.deleteLater();
+                self._destroy_view(view);
         self.tabs.clear();
+        _json_writer().flush();  # garante que sessão/histórico/zoom pendentes sejam gravados
         event.accept();
 
     def _connect_downloads(self):
@@ -311,7 +312,7 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+0"), self).activated.connect(self._zoom_reset);
 
     def add_tab(self, url: QUrl = None) -> BrowserTab:
-        view = BrowserTab(self.add_tab, self._profile, self.tabs);
+        view = BrowserTab(self.add_tab, self._profile, on_ctrl_wheel=self._on_ctrl_wheel, parent=self.tabs);
         capture = ClickCapture(view);
         channel = QWebChannel(view.page());
         channel.registerObject("capture", capture);
@@ -329,14 +330,25 @@ class MainWindow(QMainWindow):
 
     def close_tab(self, index: int):
         view = self.tabs.widget(index);
-        if isinstance(view, BrowserTab):
-            view.page().runJavaScript(
-                "document.querySelectorAll('video, audio').forEach(function(m) { m.pause(); m.src = ''; });"
-            );
-        if self.tabs.count() > 1:
-            self.tabs.removeTab(index);
-        else:
+        # fechar a última aba encerra o app; o closeEvent destrói as páginas restantes
+        if self.tabs.count() <= 1:
             self.close();
+            return;
+        self.tabs.removeTab(index);
+        if isinstance(view, BrowserTab):
+            self._destroy_view(view);
+
+    def _destroy_view(self, view: BrowserTab):
+        # interrompe carregamento/rede e destrói a página: para mídia (inclusive YouTube/MSE,
+        # que não para só com pause()/src=''), JS, timers e áudio do render process.
+        # setPage(None) deleta a página que pertence à view — não chamar deleteLater na página
+        # separadamente para evitar dupla deleção.
+        view.stop();
+        page = view.page();
+        if page is not None:
+            page.setAudioMuted(True);
+        view.setPage(None);
+        view.deleteLater();
 
     def _current_view(self) -> BrowserTab:
         return self.tabs.currentWidget();
@@ -369,6 +381,9 @@ class MainWindow(QMainWindow):
 
     def _zoom_reset(self):
         self._set_zoom(DEFAULT_ZOOM);
+
+    def _on_ctrl_wheel(self, delta_y: int):
+        self._apply_zoom_delta(ZOOM_STEP if delta_y > 0 else -ZOOM_STEP);
 
     def _apply_zoom_delta(self, delta: float):
         view = self._current_view();
@@ -477,8 +492,11 @@ class MainWindow(QMainWindow):
             self._update_nav_buttons(view);
 
     def _on_url_changed(self, view: BrowserTab, url: QUrl):
+        url_str = url.toString();
+        # restaura o zoom da página também aqui: cobre back/forward servido do
+        # back-forward cache, onde loadFinished pode não disparar
+        view.setZoomFactor(self.zoom.get(url_str));
         if view is self._current_view():
-            url_str = url.toString();
             self.url_bar.setText(url_str);
             self._update_bookmark_button(url_str);
 

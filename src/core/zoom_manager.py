@@ -1,6 +1,6 @@
 import json;
 from pathlib import Path;
-from urllib.parse import urlparse;
+from ..utils.async_io import writer;
 
 DEFAULT_ZOOM = 1.0;
 MIN_ZOOM     = 0.25;
@@ -28,22 +28,23 @@ class ZoomManager:
         return {};
 
     def _save(self):
-        self._file.write_text(json.dumps(self._zooms, ensure_ascii=False, indent=2));
+        writer().write(self._file, self._zooms);
 
     @staticmethod
-    def host_of(url: str) -> str:
-        return urlparse(url).netloc;
+    def _key(url: str) -> str:
+        # zoom é por página (URL), ignorando o fragmento (#âncora) — mesma página
+        return url.split("#", 1)[0];
 
     def get(self, url: str) -> float:
-        return self._zooms.get(self.host_of(url), DEFAULT_ZOOM);
+        return self._zooms.get(self._key(url), DEFAULT_ZOOM);
 
     def set(self, url: str, factor: float):
-        host = self.host_of(url);
-        if not host:
+        key = self._key(url);
+        if not key or key == "about:blank":
             return;
         factor = _clamp(factor);
         if abs(factor - DEFAULT_ZOOM) < 1e-6:
-            self._zooms.pop(host, None);  # padrão não precisa ser persistido
+            self._zooms.pop(key, None);  # padrão não precisa ser persistido
         else:
-            self._zooms[host] = factor;
+            self._zooms[key] = factor;
         self._save();

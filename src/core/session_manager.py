@@ -1,5 +1,6 @@
 import json;
 from pathlib import Path;
+from ..utils.async_io import writer;
 
 
 class SessionManager:
@@ -9,7 +10,7 @@ class SessionManager:
 
     def save(self, urls: list[str]):
         valid = [u for u in urls if u and u != "about:blank"];
-        self._file.write_text(json.dumps({"urls": valid}, ensure_ascii=False, indent=2));
+        writer().write(self._file, {"urls": valid});
 
     def load(self) -> list[str]:
         if not self._file.exists():
