@@ -1,7 +1,7 @@
 import json;
 from datetime import datetime;
 from pathlib import Path;
-from .constants import HISTORY_MAX;
+from ..utils.constants import HISTORY_MAX;
 
 
 class HistoryManager:

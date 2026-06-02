@@ -1,9 +1,9 @@
 import urllib.request;
 from pathlib import Path;
 
-_WEB_FILE = Path(__file__).parent.parent / "data" / "ad_selectors_web.txt";
+_WEB_FILE = Path(__file__).parent.parent.parent / "data" / "ad_selectors_web.txt";
 _LOCAL_EASYLIST = (
-    Path(__file__).parent.parent
+    Path(__file__).parent.parent.parent
     / "data" / "extensions" / "uBlock0.chromium"
     / "assets" / "thirdparties" / "easylist" / "easylist.txt"
 );

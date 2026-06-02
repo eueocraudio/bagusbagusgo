@@ -3,11 +3,11 @@ import os;
 import tempfile;
 from pathlib import Path;
 from PySide6.QtWidgets import QApplication;
-from . import env_config as _env;
+from .settings import env_config as _env;
 from .main_window import MainWindow;
-from .theme import DARK_STYLESHEET;
-from .constants import APP_NAME, APP_VERSION, APP_ID;
-from . import logger as _logger_mod;
+from .utils.theme import DARK_STYLESHEET;
+from .utils.constants import APP_NAME, APP_VERSION, APP_ID;
+from .utils import logger as _logger_mod;
 
 
 def _apply_chromium_flags():

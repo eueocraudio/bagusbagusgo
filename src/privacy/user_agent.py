@@ -1,7 +1,7 @@
 import random;
 from pathlib import Path;
 
-_UA_FILE = Path(__file__).parent.parent / "data" / "user_agents.txt";
+_UA_FILE = Path(__file__).parent.parent.parent / "data" / "user_agents.txt";
 
 
 def random_user_agent() -> str:

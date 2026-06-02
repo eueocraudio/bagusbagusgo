@@ -10,23 +10,23 @@ from PySide6.QtWebChannel import QWebChannel;
 from PySide6.QtCore import QUrl, Qt;
 from PySide6.QtGui import QKeySequence, QShortcut;
 
-from .constants import APP_NAME, APP_VERSION, APP_ID;
-from .bookmark_manager import BookmarkManager;
-from .bookmarks_dialog import ManageBookmarksDialog;
-from .history_manager import HistoryManager;
-from .history_dialog import HistoryDialog;
-from .download_panel import DownloadPanel;
-from .click_capture import ClickCapture, CLICK_LISTENER_JS;
-from .browser_tab import BrowserTab;
-from .user_agent import random_user_agent, navigator_spoof_script;
-from .session_manager import SessionManager;
-from .ad_blocker import build_ad_block_js;
-from .extension_manager import load_extensions;
-from .env_config import get_bool;
+from .utils.constants import APP_NAME, APP_VERSION, APP_ID;
+from .bookmarks.bookmark_manager import BookmarkManager;
+from .bookmarks.bookmarks_dialog import ManageBookmarksDialog;
+from .history.history_manager import HistoryManager;
+from .history.history_dialog import HistoryDialog;
+from .downloads.download_panel import DownloadPanel;
+from .core.click_capture import ClickCapture, CLICK_LISTENER_JS;
+from .core.browser_tab import BrowserTab;
+from .privacy.user_agent import random_user_agent, navigator_spoof_script;
+from .core.session_manager import SessionManager;
+from .privacy.ad_blocker import build_ad_block_js;
+from .core.extension_manager import load_extensions;
+from .settings.env_config import get_bool;
 from .myass.panel import MyAssPanel;
 from .ai.panel import AIPanel;
-from .settings_panel import SettingsPanel;
-from . import websettings_manager as _wsm;
+from .settings.settings_panel import SettingsPanel;
+from .settings import websettings_manager as _wsm;
 
 
 class MainWindow(QMainWindow):

@@ -1,7 +1,7 @@
 import os;
 from pathlib import Path;
 
-_PROJECT_DIR = Path(__file__).parent.parent;
+_PROJECT_DIR = Path(__file__).parent.parent.parent;
 _INSTALL_DIR = Path.home() / ".local" / "bin" / "bagus";
 
 

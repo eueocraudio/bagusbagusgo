@@ -7,11 +7,11 @@ from PySide6.QtWidgets import (
     QGridLayout, QScrollArea,
 );
 from PySide6.QtCore import Qt, Signal, QObject, QEvent;
-from .ua_updater import update as ua_update;
+from ..privacy.ua_updater import update as ua_update;
 from . import websettings_manager as _wsm;
-from .ads_updater import update as ads_update;
+from ..privacy.ads_updater import update as ads_update;
 
-_ROOT         = Path(__file__).parent.parent;
+_ROOT         = Path(__file__).parent.parent.parent;
 _UA_FILE      = _ROOT / "data" / "user_agents.txt";
 _ADS_FILE     = _ROOT / "data" / "ad_selectors.txt";
 _ADS_WEB_FILE = _ROOT / "data" / "ad_selectors_web.txt";
@@ -183,7 +183,6 @@ class _AdsPanel(QWidget):
         layout.setContentsMargins(8, 8, 8, 8);
         layout.setSpacing(8);
 
-        # --- lista pessoal ---
         grp_personal = QGroupBox("Lista Pessoal");
         grp_layout = QVBoxLayout(grp_personal);
         self._personal_editor = _FileEditor(_ADS_FILE, filter_comments=True, autosave=True);
@@ -196,7 +195,6 @@ class _AdsPanel(QWidget):
         line.setStyleSheet("background-color: #cc0000; max-height: 2px; border: none;");
         layout.addWidget(line);
 
-        # --- lista da internet ---
         grp_web = QGroupBox("Lista da Internet");
         grp_web_layout = QVBoxLayout(grp_web);
         self._web_editor = _FileEditor(

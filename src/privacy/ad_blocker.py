@@ -1,9 +1,9 @@
 import json;
 from pathlib import Path;
-from .env_config import get_bool;
+from ..settings.env_config import get_bool;
 
-_PERSONAL_FILE = Path(__file__).parent.parent / "data" / "ad_selectors.txt";
-_WEB_FILE      = Path(__file__).parent.parent / "data" / "ad_selectors_web.txt";
+_PERSONAL_FILE = Path(__file__).parent.parent.parent / "data" / "ad_selectors.txt";
+_WEB_FILE      = Path(__file__).parent.parent.parent / "data" / "ad_selectors_web.txt";
 
 
 def _read(path: Path) -> list[str]:
