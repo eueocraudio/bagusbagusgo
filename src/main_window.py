@@ -24,6 +24,7 @@ from .ad_blocker import build_ad_block_js;
 from .extension_manager import load_extensions;
 from .env_config import get_bool;
 from .myass.panel import MyAssPanel;
+from .ai.panel import AIPanel;
 from .settings_panel import SettingsPanel;
 from . import websettings_manager as _wsm;
 
@@ -164,6 +165,11 @@ class MainWindow(QMainWindow):
         self.btn_home.clicked.connect(self._go_home);
         nav_layout.addWidget(self.btn_home);
 
+        self.btn_new_tab = QPushButton("+");
+        self.btn_new_tab.setFixedWidth(32);
+        self.btn_new_tab.clicked.connect(lambda: self.add_tab());
+        nav_layout.addWidget(self.btn_new_tab);
+
         self.url_bar = QLineEdit();
         self.url_bar.setPlaceholderText("Digite um endereço ou pesquise...");
         self.url_bar.returnPressed.connect(self._navigate_to_url);
@@ -199,11 +205,6 @@ class MainWindow(QMainWindow):
         self.btn_translate.setToolTip("Traduzir página para Português");
         self.btn_translate.clicked.connect(self._translate_page);
         nav_layout.addWidget(self.btn_translate);
-
-        self.btn_new_tab = QPushButton("+");
-        self.btn_new_tab.setFixedWidth(32);
-        self.btn_new_tab.clicked.connect(lambda: self.add_tab());
-        nav_layout.addWidget(self.btn_new_tab);
 
         settings_menu = QMenu(self);
         settings_menu.addAction("About", self._open_about);
@@ -251,6 +252,7 @@ class MainWindow(QMainWindow):
         self.outer_tabs = QTabWidget();
         self.outer_tabs.addTab(browser_widget, "BagusBagusGo");
         self.outer_tabs.addTab(MyAssPanel(), "MyAss");
+        self.outer_tabs.addTab(AIPanel(), "AI");
         self.outer_tabs.addTab(QWidget(), "Anonymity");
         self.outer_tabs.addTab(QWidget(), "AutoBot");
         self.outer_tabs.addTab(QWidget(), "Downloads");
@@ -424,6 +426,12 @@ class MainWindow(QMainWindow):
         if url and url != "about:blank":
             self.history.record(view.title() or url, url);
         view.page().runJavaScript(CLICK_LISTENER_JS);
+        if "translate.google" in url or "translate.goog" in url:
+            view.page().runJavaScript(
+                "document.querySelectorAll('.skiptranslate, #goog-gt-tt, .goog-te-banner-frame')"
+                ".forEach(el => el.remove());"
+                "document.body && (document.body.style.top = '0px');"
+            );
         if view is self._current_view():
             self.btn_reload.setText("↻");
             self.progress_bar.hide();
