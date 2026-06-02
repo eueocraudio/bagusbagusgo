@@ -2,8 +2,8 @@ import json;
 from pathlib import Path;
 from ..settings.env_config import get_bool;
 
-_PERSONAL_FILE = Path(__file__).parent.parent.parent / "data" / "ad_selectors.txt";
-_WEB_FILE      = Path(__file__).parent.parent.parent / "data" / "ad_selectors_web.txt";
+PERSONAL_FILE = Path(__file__).parent.parent.parent / "data" / "ad_selectors.txt";
+WEB_FILE      = Path(__file__).parent.parent.parent / "data" / "ad_selectors_web.txt";
 
 
 def _read(path: Path) -> list[str]:
@@ -20,9 +20,9 @@ def _read(path: Path) -> list[str]:
 def _load_selectors() -> list[str]:
     selectors = [];
     if get_bool("AD_SELECTOR_PERSONAL_ENABLED", default=True):
-        selectors.extend(_read(_PERSONAL_FILE));
+        selectors.extend(_read(PERSONAL_FILE));
     if get_bool("AD_SELECTOR_WEB_ENABLED", default=False):
-        selectors.extend(_read(_WEB_FILE));
+        selectors.extend(_read(WEB_FILE));
     return list(dict.fromkeys(selectors));
 
 

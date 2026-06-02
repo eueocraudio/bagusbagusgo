@@ -7,14 +7,12 @@ from PySide6.QtWidgets import (
     QGridLayout, QScrollArea,
 );
 from PySide6.QtCore import Qt, Signal, QObject, QEvent;
-from ..privacy.ua_updater import update as ua_update;
-from . import websettings_manager as _wsm;
+from ..privacy.ua_updater import update as ua_update, _UA_FILE;
 from ..privacy.ads_updater import update as ads_update;
+from ..privacy.ad_blocker import PERSONAL_FILE as _ADS_FILE, WEB_FILE as _ADS_WEB_FILE;
+from . import websettings_manager as _wsm;
 
-_ROOT         = Path(__file__).parent.parent.parent;
-_UA_FILE      = _ROOT / "data" / "user_agents.txt";
-_ADS_FILE     = _ROOT / "data" / "ad_selectors.txt";
-_ADS_WEB_FILE = _ROOT / "data" / "ad_selectors_web.txt";
+_ROOT = Path(__file__).parent.parent.parent;
 
 class _Worker(QObject):
     done = Signal(int, str);
@@ -158,6 +156,7 @@ class _EnvEditor(QWidget):
         for key, cb in self._checks.items():
             current[key] = "true" if cb.isChecked() else "false";
         lines = [];
+        seen: set[str] = set();
         if self._env_file.exists():
             for line in self._env_file.read_text(encoding="utf-8").splitlines():
                 stripped = line.strip();
@@ -166,6 +165,9 @@ class _EnvEditor(QWidget):
                     continue;
                 k, _, _ = stripped.partition("=");
                 k = k.strip();
+                if k in seen:
+                    continue;
+                seen.add(k);
                 if k in current:
                     lines.append(f"{k}={current.pop(k)}");
                 else:
@@ -296,7 +298,6 @@ class _WebSettingsPanel(QWidget):
             cb.setToolTip(desc);
             cb.setStyleSheet(_CB_STYLE);
             if desc:
-                cb.setText(f"{name}");
                 lbl = QLabel(desc);
                 lbl.setStyleSheet("color: #ff8c00; font-size: 10px; padding-left: 22px;");
                 lbl.setWordWrap(True);

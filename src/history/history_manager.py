@@ -40,11 +40,12 @@ class HistoryManager:
         q = query.lower();
         return [e for e in self.all() if q in e["title"].lower() or q in e["url"].lower()];
 
-    def remove(self, index_in_reversed: int):
-        real = len(self._entries) - 1 - index_in_reversed;
-        if 0 <= real < len(self._entries):
-            self._entries.pop(real);
-            self._save();
+    def remove(self, visited_at: str):
+        for i, entry in enumerate(self._entries):
+            if entry.get("visited_at") == visited_at:
+                self._entries.pop(i);
+                self._save();
+                return;
 
     def clear(self):
         self._entries = [];

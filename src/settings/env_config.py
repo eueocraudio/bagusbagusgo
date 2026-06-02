@@ -3,6 +3,7 @@ from pathlib import Path;
 
 _PROJECT_DIR = Path(__file__).parent.parent.parent;
 _INSTALL_DIR = Path.home() / ".local" / "bin" / "bagus";
+_SHELL_VARS  = frozenset(os.environ.keys());  # vars set before any .env is loaded
 
 
 def _load_file(path: Path):
@@ -11,7 +12,9 @@ def _load_file(path: Path):
         if not line or line.startswith("#") or "=" not in line:
             continue;
         key, _, value = line.partition("=");
-        os.environ[key.strip()] = value.strip();
+        key = key.strip();
+        if key not in _SHELL_VARS:            # shell-exported vars always win
+            os.environ[key] = value.strip();
 
 
 def load(base_dir: Path = None):

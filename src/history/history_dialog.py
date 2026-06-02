@@ -70,7 +70,7 @@ class HistoryDialog(QDialog):
                 last_group = group;
             visited_dt = datetime.fromisoformat(entry["visited_at"]);
             item = QListWidgetItem(f"  {visited_dt.strftime('%H:%M')}  {entry['title']}  —  {entry['url']}");
-            item.setData(Qt.UserRole, (idx, entry["url"]));
+            item.setData(Qt.UserRole, (entry["visited_at"], entry["url"]));
             self.list_widget.addItem(item);
 
     def _open_url(self):
@@ -85,8 +85,8 @@ class HistoryDialog(QDialog):
         item = self.list_widget.currentItem();
         if not item or not item.data(Qt.UserRole):
             return;
-        idx, _ = item.data(Qt.UserRole);
-        self.manager.remove(idx);
+        visited_at, _ = item.data(Qt.UserRole);
+        self.manager.remove(visited_at);
         self._populate(self.search_bar.text());
 
     def _clear_all(self):

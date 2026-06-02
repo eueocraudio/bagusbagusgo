@@ -13,6 +13,7 @@ def load_extensions(profile: QWebEngineProfile):
     if not _EXTENSIONS_DIR.exists():
         return;
     mgr = profile.extensionManager();
+    to_install: list[str] = [];
     for ext_dir in sorted(_EXTENSIONS_DIR.iterdir()):
         if not ext_dir.is_dir() or not (ext_dir / "manifest.json").exists():
             continue;
@@ -20,8 +21,14 @@ def load_extensions(profile: QWebEngineProfile):
         if env_key and not get_bool(env_key, default=True):
             print(f"[extensão] desativada ({env_key}=false): {ext_dir.name}");
             continue;
-        mgr.installFinished.connect(
-            lambda ok, name=ext_dir.name:
-                print(f"[extensão] {'instalada' if ok else 'falhou'}: {name}")
-        );
-        mgr.installExtension(str(ext_dir));
+        to_install.append(ext_dir.name);
+    if not to_install:
+        return;
+    counter = [0];
+    def _on_installed(ok):
+        name = to_install[counter[0]] if counter[0] < len(to_install) else "?";
+        print(f"[extensão] {'instalada' if ok else 'falhou'}: {name}");
+        counter[0] += 1;
+    mgr.installFinished.connect(_on_installed);
+    for name in to_install:
+        mgr.installExtension(str(_EXTENSIONS_DIR / name));

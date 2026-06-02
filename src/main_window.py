@@ -383,7 +383,7 @@ class MainWindow(QMainWindow):
         if not url or url == "about:blank":
             return;
         encoded = QUrl.toPercentEncoding(url).data().decode();
-        translate_url = f"https://translate.google.com/translate?hl=pt-BR&sl=en&tl=pt&u={encoded}";
+        translate_url = f"https://translate.google.com/translate?hl=pt-BR&sl=auto&tl=pt&u={encoded}";
         self._current_view().load(QUrl(translate_url));
 
     def _toggle_downloads_panel(self):
@@ -427,11 +427,18 @@ class MainWindow(QMainWindow):
             self.history.record(view.title() or url, url);
         view.page().runJavaScript(CLICK_LISTENER_JS);
         if "translate.google" in url or "translate.goog" in url:
-            view.page().runJavaScript(
-                "document.querySelectorAll('.skiptranslate, #goog-gt-tt, .goog-te-banner-frame')"
-                ".forEach(el => el.remove());"
-                "document.body && (document.body.style.top = '0px');"
-            );
+            view.page().runJavaScript("""
+(function() {
+    function _rmBar() {
+        document.querySelectorAll('.skiptranslate, #goog-gt-tt, .goog-te-banner-frame')
+            .forEach(function(el) { el.remove(); });
+        if (document.body) document.body.style.top = '0px';
+    }
+    _rmBar();
+    new MutationObserver(function() { _rmBar(); })
+        .observe(document.documentElement, {childList: true, subtree: true});
+})();
+""");
         if view is self._current_view():
             self.btn_reload.setText("↻");
             self.progress_bar.hide();
