@@ -80,7 +80,7 @@ Ao fechar uma aba com vídeo/áudio em reprodução, a mídia é pausada automat
 | Avançar | `→` ou **Alt+→** |
 | Recarregar | `↻` ou **F5** |
 | Parar | `✕` (durante carregamento) ou **F5** |
-| Página inicial | `⌂` (abre DuckDuckGo) |
+| Página inicial | `⌂` (abre a página inicial; padrão DuckDuckGo, configurável em Settings → Geral) |
 | Foco na barra | **Ctrl+L** |
 
 ---
@@ -128,6 +128,9 @@ Abrir/fechar manualmente: `⬇` ou **Ctrl+J**.
 
 Botão na extremidade direita da barra. Menu com:
 - **About** — nome, versão e informações do app
+
+A aba **Settings** (topo da janela) tem mais opções, na sub-aba **Geral**:
+- **Página inicial / nova aba** — URL aberta em novas abas, no botão `⌂` e ao restaurar sessão vazia (padrão DuckDuckGo). Salva em `.env` como `HOME_URL`; tem efeito na próxima inicialização.
 
 ---
 

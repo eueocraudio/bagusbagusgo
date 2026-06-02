@@ -10,7 +10,7 @@ from PySide6.QtWebChannel import QWebChannel;
 from PySide6.QtCore import QUrl, Qt;
 from PySide6.QtGui import QKeySequence, QShortcut;
 
-from .utils.constants import APP_NAME, APP_VERSION, APP_ID;
+from .utils.constants import APP_NAME, APP_VERSION, APP_ID, DEFAULT_HOME_URL;
 from .bookmarks.bookmark_manager import BookmarkManager;
 from .bookmarks.bookmarks_dialog import ManageBookmarksDialog;
 from .history.history_manager import HistoryManager;
@@ -22,7 +22,7 @@ from .privacy.user_agent import random_user_agent, navigator_spoof_script;
 from .core.session_manager import SessionManager;
 from .privacy.ad_blocker import build_ad_block_js;
 from .core.extension_manager import load_extensions;
-from .settings.env_config import get_bool;
+from .settings.env_config import get_bool, get_str;
 from .myass.panel import MyAssPanel;
 from .ai.panel import AIPanel;
 from .settings.settings_panel import SettingsPanel;
@@ -35,6 +35,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}");
         self.setMinimumSize(1024, 700);
         self._base_dir = base_dir;
+        self._home_url = get_str("HOME_URL", DEFAULT_HOME_URL);
+        if "://" not in self._home_url:
+            self._home_url = "https://" + self._home_url;
         self._downloads_dir = base_dir / "downloads";
         self._downloads_dir.mkdir(parents=True, exist_ok=True);
         self._profile = QWebEngineProfile("bbgo", self);
@@ -58,7 +61,7 @@ class MainWindow(QMainWindow):
             for url in urls:
                 self.add_tab(QUrl(url));
         else:
-            self.add_tab(QUrl("https://duckduckgo.com"));
+            self.add_tab(QUrl(self._home_url));
 
     def closeEvent(self, event):
         urls = [
@@ -315,7 +318,7 @@ class MainWindow(QMainWindow):
         view.page().linkHovered.connect(self.status_bar.showMessage);
         index = self.tabs.addTab(view, "Nova aba");
         self.tabs.setCurrentIndex(index);
-        view.load(url or QUrl("https://duckduckgo.com"));
+        view.load(url or QUrl(self._home_url));
         return view;
 
     def close_tab(self, index: int):
@@ -350,7 +353,7 @@ class MainWindow(QMainWindow):
             view.reload();
 
     def _go_home(self):
-        self._current_view().load(QUrl("https://duckduckgo.com"));
+        self._current_view().load(QUrl(self._home_url));
 
     def _toggle_bookmark(self):
         view = self._current_view();

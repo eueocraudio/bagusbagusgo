@@ -2,7 +2,7 @@ import threading;
 from pathlib import Path;
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton, QCheckBox, QPlainTextEdit,
+    QPushButton, QCheckBox, QPlainTextEdit, QLineEdit,
     QTabWidget, QGroupBox, QMessageBox, QFrame,
     QGridLayout, QScrollArea,
 );
@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal, QObject, QEvent;
 from ..privacy.ua_updater import update as ua_update, _UA_FILE;
 from ..privacy.ads_updater import update as ads_update;
 from ..privacy.ad_blocker import _PERSONAL_FILE as _ADS_FILE, _WEB_FILE as _ADS_WEB_FILE;
+from ..utils.constants import DEFAULT_HOME_URL;
 from . import websettings_manager as _wsm;
 
 _ROOT = Path(__file__).parent.parent.parent;
@@ -119,8 +120,20 @@ class _EnvEditor(QWidget):
         note.setStyleSheet("color: #888; font-size: 11px;");
         box_layout.addWidget(note);
 
-        self._checks: dict[str, QCheckBox] = {};
         import os as _os;
+
+        url_row = QHBoxLayout();
+        url_label = QLabel("Página inicial / nova aba:");
+        self._home_url_edit = QLineEdit();
+        self._home_url_edit.setPlaceholderText(DEFAULT_HOME_URL);
+        self._home_url_edit.setText(_os.environ.get("HOME_URL", "").strip() or DEFAULT_HOME_URL);
+        self._home_url_edit.setToolTip("HOME_URL — URL aberta em novas abas, no botão ⌂ e ao restaurar sessão vazia");
+        self._home_url_edit.editingFinished.connect(self._save);
+        url_row.addWidget(url_label);
+        url_row.addWidget(self._home_url_edit, 1);
+        box_layout.addLayout(url_row);
+
+        self._checks: dict[str, QCheckBox] = {};
         for key, label, default in _ENV_VARS:
             cb = QCheckBox(label);
             val = _os.environ.get(key, str(default)).strip().lower();
@@ -155,6 +168,10 @@ class _EnvEditor(QWidget):
         current = self._load_env();
         for key, cb in self._checks.items():
             current[key] = "true" if cb.isChecked() else "false";
+        home_url = self._home_url_edit.text().strip() or DEFAULT_HOME_URL;
+        if "://" not in home_url:
+            home_url = "https://" + home_url;
+        current["HOME_URL"] = home_url;
         lines = [];
         seen: set[str] = set();
         if self._env_file.exists():

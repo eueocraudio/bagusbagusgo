@@ -33,3 +33,8 @@ def load(base_dir: Path = None):
 
 def get_bool(key: str, default: bool = False) -> bool:
     return os.environ.get(key, str(default)).strip().lower() in ("true", "1", "yes");
+
+
+def get_str(key: str, default: str = "") -> str:
+    val = os.environ.get(key, "").strip();
+    return val if val else default;
