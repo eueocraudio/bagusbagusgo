@@ -1,6 +1,6 @@
 # BagusBagusGo (BBGo)
 
-**Versão: 2.0.2**  
+**Versão: 2.0.4**  
 Browser desktop construído com Python 3 e PySide6 (QtWebEngine).  
 Motor de busca padrão: **DuckDuckGo** · Tema: **Dark + Vermelho**.
 
@@ -43,7 +43,7 @@ python3 run.py /caminho/do/diretorio
 
 O caminho do diretório de dados é impresso no terminal:
 ```
-[BBGo v2.0.2] diretório de dados: /tmp/bagusbagusgo_abc123
+[BBGo v2.0.4] diretório de dados: /tmp/bagusbagusgo_abc123
 ```
 
 ---
@@ -143,7 +143,7 @@ Páginas web também em dark mode via `QWebEngineSettings.ForceDarkMode`.
 A cada inicialização, um User Agent é sorteado de `data/user_agents.txt`:
 
 ```
-[BBGo v2.0.2] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
+[BBGo v2.0.4] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
 ```
 
 O `navigator.*`, `plugins`, `mimeTypes` e `window.chrome` são spoofados para mascarar o QtWebEngine.
@@ -178,7 +178,7 @@ if "site.com" in url:
     view.page().runJavaScript("document.title = 'Meu título';");
 ```
 
-**Regra ativa:** URLs com `google.com` são redirecionadas para o DuckDuckGo.
+**Regra ativa:** páginas do Google Tradutor (`translate.google` / `translate.goog`) têm a barra superior removida automaticamente para leitura limpa.
 
 ---
 
@@ -204,9 +204,11 @@ if "site.com" in url:
 |---|---|---|
 | 1 | **BagusBagusGo** | Browser completo |
 | 2 | **MyAss** | Barra de botões (New work, New flow) + tabela Work/Flow/Status/Date |
-| 3 | **Anonymity** | — |
-| 4 | **AutoBot** | — |
-| 5 | **Downloads** | — |
+| 3 | **AI** | Barra (Agent list) + tabela Agent/Task/Status/Date |
+| 4 | **Anonymity** | Placeholder vazio |
+| 5 | **AutoBot** | Placeholder vazio |
+| 6 | **Downloads** | Placeholder vazio |
+| 7 | **Settings** | Painel de configurações (`SettingsPanel`) |
 
 ---
 
@@ -224,27 +226,45 @@ if "site.com" in url:
 ## Estrutura do projeto
 
 ```
-run.py                      — entry point
+run.py                      — entry point; passa sys.argv para main()
 data/
-  user_agents.txt           — lista de user agents
+  user_agents.txt           — lista de user agents (um por linha)
+  ad_selectors.txt          — seletores CSS para bloqueio de anúncios
+  extensions/               — extensões Chrome estáticas (ex.: uBlock Origin)
 src/
-  browser.py                — main()
-  constants.py              — APP_NAME, APP_VERSION, APP_ID e constantes globais
-  theme.py                  — tema dark + vermelho
-  user_agent.py             — user agent aleatório + navigator spoof
-  request_interceptor.py    — interceptor HTTP por domínio (extensível)
-  session_manager.py        — salva/restaura sessão
-  bookmark_manager.py       — gerenciamento de favoritos
-  bookmarks_dialog.py       — diálogo de favoritos
-  history_manager.py        — gerenciamento de histórico
-  history_dialog.py         — diálogo de histórico
-  download_panel.py         — painel de downloads
-  click_capture.py          — captura de cliques via QWebChannel
-  browser_tab.py            — aba do browser
-  main_window.py            — janela principal
+  browser.py                — main(): lê args, aplica flags Chromium, inicia MainWindow
+  main_window.py            — MainWindow (orquestra tudo)
+  utils/
+    constants.py            — APP_NAME, APP_VERSION, APP_ID e constantes globais
+    theme.py                — DARK_STYLESHEET (tema dark + vermelho)
+    logger.py               — redireciona stdout/stderr para arquivo de log
+  core/
+    browser_tab.py          — BrowserTab (QWebEngineView)
+    click_capture.py        — captura de cliques via QWebChannel
+    session_manager.py      — salva/restaura sessão
+    extension_manager.py    — carrega extensões de data/extensions/
+    request_interceptor.py  — interceptor HTTP por domínio (extensível)
+  privacy/
+    user_agent.py           — user agent aleatório + navigator spoof
+    ad_blocker.py           — bloqueador CSS baseado em data/ad_selectors.txt
+    ads_updater.py          — atualização da lista de seletores
+    ua_updater.py           — atualização da lista de user agents
+  bookmarks/
+    bookmark_manager.py     — CRUD de favoritos em JSON
+    bookmarks_dialog.py     — diálogo de favoritos
+  history/
+    history_manager.py      — registro e busca de histórico
+    history_dialog.py       — diálogo de histórico
+  downloads/
+    download_panel.py       — painel de downloads
+  settings/
+    env_config.py           — carrega .env; get_bool(key, default)
+    settings_panel.py       — SettingsPanel (aba Settings)
+    websettings_manager.py  — aplica QWebEngineSettings ao profile
   myass/
-    __init__.py
     panel.py                — MyAssPanel
+  ai/
+    panel.py                — AIPanel
 install.sh                  — script de instalação
 CLAUDE.md                   — instruções para o Claude Code
 README.md                   — esta documentação

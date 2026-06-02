@@ -124,18 +124,20 @@ Todos os arquivos ficam no diretório passado como argumento (ou `/tmp/bagusbagu
 ## Layout da janela
 
 ```
-MainWindow  (título: "BagusBagusGo v2.0.3")
-└── outer QTabWidget (5 abas)
+MainWindow  (título: "BagusBagusGo v{APP_VERSION}")
+└── outer QTabWidget (7 abas)
     ├── [1] BagusBagusGo  ← browser completo
     │    ├── nav_bar (QWidget + QHBoxLayout)
-    │    │    └── ← → ↻ ⌂  [URL bar]  ☆ ★≡ 🕐 ⬇ + ⚙
+    │    │    └── ← → ↻ ⌂ +  [URL bar]  ☆ ★≡ 🕐 ⬇ PT ⚙
     │    ├── bookmarks_bar (QWidget, visível só com favoritos)
     │    ├── progress_bar
     │    └── QTabWidget interno (abas das páginas web)
     ├── [2] MyAss       ← MyAssPanel
-    ├── [3] Anonymity
-    ├── [4] AutoBot
-    └── [5] Downloads
+    ├── [3] AI          ← AIPanel
+    ├── [4] Anonymity   (placeholder vazio)
+    ├── [5] AutoBot     (placeholder vazio)
+    ├── [6] Downloads   (placeholder vazio)
+    └── [7] Settings    ← SettingsPanel
 ```
 
 ## Configurações do QWebEngineProfile
@@ -158,7 +160,7 @@ Aplicadas em `MainWindow._connect_downloads()`:
 
 | Condição (`_on_load_finished`) | Ação |
 |---|---|
-| `"google.com" in url` | Redireciona para `https://duckduckgo.com` |
+| `"translate.google" in url` ou `"translate.goog" in url` | Remove a barra superior do Google Tradutor (via JS + MutationObserver) |
 | YouTube (via script) | Pula propagandas a cada 500ms |
 
 ## Sessão
