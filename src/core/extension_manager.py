@@ -25,11 +25,19 @@ def load_extensions(profile: QWebEngineProfile):
         to_install.append(ext_dir.name);
     if not to_install:
         return;
-    counter = [0];
+    # instala uma de cada vez: installFinished(ok) não diz qual extensão terminou,
+    # então só iniciamos a próxima depois da anterior — o nome logado sempre bate
+    # com o resultado, independente da ordem de conclusão do Chromium
+    index = [0];
+    def _install_next():
+        if index[0] >= len(to_install):
+            mgr.installFinished.disconnect(_on_installed);
+            return;
+        mgr.installExtension(str(_EXTENSIONS_DIR / to_install[index[0]]));
     def _on_installed(ok):
-        name = to_install[counter[0]] if counter[0] < len(to_install) else "?";
+        name = to_install[index[0]];
         print(f"[extensão] {'instalada' if ok else 'falhou'}: {name}");
-        counter[0] += 1;
+        index[0] += 1;
+        _install_next();
     mgr.installFinished.connect(_on_installed);
-    for name in to_install:
-        mgr.installExtension(str(_EXTENSIONS_DIR / name));
+    _install_next();

@@ -1,3 +1,4 @@
+import os;
 import random;
 from pathlib import Path;
 
@@ -40,6 +41,10 @@ def navigator_spoof_script(ua: str) -> str:
     is_firefox = "Firefox" in ua;
     is_chrome  = "Chrome" in ua and not is_firefox;
 
+    # usa a contagem real de núcleos (mín. 2) para casar com o que o Chromium
+    # reporta via flags — evita divergência detectável no fingerprint
+    cores = max(2, os.cpu_count() or 8);
+
     return f"""
 (function() {{
     const ua = {ua!r};
@@ -54,7 +59,7 @@ def navigator_spoof_script(ua: str) -> str:
         platform:            {{ get: () => {platform!r}, configurable: true }},
         webdriver:           {{ get: () => undefined, configurable: true }},
         languages:           {{ get: () => ['pt-BR', 'pt', 'en-US', 'en'], configurable: true }},
-        hardwareConcurrency: {{ get: () => 8, configurable: true }},
+        hardwareConcurrency: {{ get: () => {cores}, configurable: true }},
         deviceMemory:        {{ get: () => 8, configurable: true }},
     }};
     for (const [k, v] of Object.entries(props)) {{

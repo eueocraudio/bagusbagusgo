@@ -1,3 +1,4 @@
+import os;
 from pathlib import Path;
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel,
@@ -116,13 +117,11 @@ class _EnvEditor(QWidget):
         note.setStyleSheet("color: #888; font-size: 11px;");
         box_layout.addWidget(note);
 
-        import os as _os;
-
         url_row = QHBoxLayout();
         url_label = QLabel("Página inicial / nova aba:");
         self._home_url_edit = QLineEdit();
         self._home_url_edit.setPlaceholderText(DEFAULT_HOME_URL);
-        self._home_url_edit.setText(_os.environ.get("HOME_URL", "").strip() or DEFAULT_HOME_URL);
+        self._home_url_edit.setText(os.environ.get("HOME_URL", "").strip() or DEFAULT_HOME_URL);
         self._home_url_edit.setToolTip("HOME_URL — URL aberta em novas abas, no botão ⌂ e ao restaurar sessão vazia");
         self._home_url_edit.editingFinished.connect(self._save);
         url_row.addWidget(url_label);
@@ -132,7 +131,7 @@ class _EnvEditor(QWidget):
         self._checks: dict[str, QCheckBox] = {};
         for key, label, default in _ENV_VARS:
             cb = QCheckBox(label);
-            val = _os.environ.get(key, str(default)).strip().lower();
+            val = os.environ.get(key, str(default)).strip().lower();
             cb.setChecked(val in ("true", "1", "yes"));
             cb.setToolTip(f"{key}");
             cb.stateChanged.connect(self._save);
@@ -347,7 +346,7 @@ class SettingsPanel(QWidget):
 
         tabs = QTabWidget();
         tabs.addTab(_EnvEditor(env_file),                                                              "Geral");
-        tabs.addTab(_WebSettingsPanel(base_dir, profile) if base_dir and profile else QWidget(),       "Browser");
+        tabs.addTab(_WebSettingsPanel(base_dir, profile) if base_dir and profile else QWidget(),       "WebSettings");
         tabs.addTab(_FileEditor(_UA_FILE, filter_comments=True, show_update_btn=True, readonly=True),  "User Agents");
         tabs.addTab(_AdsPanel(),                                                                        "Ad Selectors");
         layout.addWidget(tabs);

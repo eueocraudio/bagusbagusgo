@@ -278,7 +278,8 @@ class MainWindow(QMainWindow):
             item = self.bookmarks_layout.takeAt(0);
             if item.widget():
                 item.widget().deleteLater();
-        for b in self.bookmarks.all():
+        bookmarks = self.bookmarks.all();
+        for b in bookmarks:
             btn = QPushButton(b["title"]);
             btn.setMaximumWidth(160);
             url = b["url"];
@@ -286,7 +287,7 @@ class MainWindow(QMainWindow):
             btn.setToolTip(url);
             self.bookmarks_layout.addWidget(btn);
         self.bookmarks_layout.addStretch();
-        self.bookmarks_bar.setVisible(len(self.bookmarks.all()) > 0);
+        self.bookmarks_bar.setVisible(len(bookmarks) > 0);
 
     def _build_shortcuts(self):
         QShortcut(QKeySequence("Ctrl+T"), self).activated.connect(lambda: self.add_tab());
