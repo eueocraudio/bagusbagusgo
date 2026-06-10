@@ -319,7 +319,7 @@ class MainWindow(QMainWindow):
         view.page().setWebChannel(channel);
         view.loadStarted.connect(lambda: self._on_load_started(view));
         view.loadProgress.connect(lambda p: self._on_load_progress(view, p));
-        view.loadFinished.connect(lambda ok: self._on_load_finished(view));
+        view.loadFinished.connect(lambda ok: self._on_load_finished(view, ok));
         view.urlChanged.connect(lambda u: self._on_url_changed(view, u));
         view.titleChanged.connect(lambda t: self._on_title_changed(view, t));
         view.page().linkHovered.connect(self.status_bar.showMessage);
@@ -456,20 +456,35 @@ class MainWindow(QMainWindow):
             self.url_bar.setText(url);
             self._update_nav_buttons(view);
             self._update_bookmark_button(url);
+            # ressincroniza botão recarregar/parar e progresso com o estado da
+            # aba ativada (evita "✕" preso ou barra de progresso de outra aba)
+            if isinstance(view, BrowserTab) and getattr(view, "_is_loading", False):
+                self.btn_reload.setText("✕");
+                self.progress_bar.setValue(getattr(view, "_load_progress", 0));
+                self.progress_bar.show();
+            else:
+                self.btn_reload.setText("↻");
+                self.progress_bar.hide();
 
     def _on_load_started(self, view: BrowserTab):
+        view._is_loading = True;
+        view._load_progress = 0;
         if view is self._current_view():
             self.btn_reload.setText("✕");
             self.progress_bar.setValue(0);
             self.progress_bar.show();
 
     def _on_load_progress(self, view: BrowserTab, progress: int):
+        view._load_progress = progress;
         if view is self._current_view():
             self.progress_bar.setValue(progress);
 
-    def _on_load_finished(self, view: BrowserTab):
+    def _on_load_finished(self, view: BrowserTab, ok: bool = True):
+        view._is_loading = False;
         url = view.url().toString();
-        if url and url != "about:blank":
+        # só registra carregamentos bem-sucedidos: páginas que falharam (404, erro
+        # de rede) não poluem o histórico
+        if ok and url and url != "about:blank":
             self.history.record(view.title() or url, url);
         view.setZoomFactor(self.zoom.get(url));
         view.page().runJavaScript(CLICK_LISTENER_JS);

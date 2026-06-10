@@ -1,5 +1,6 @@
 import sys;
 import logging;
+import threading;
 from pathlib import Path;
 
 _FORMAT  = "%(asctime)s  %(levelname)-8s  %(message)s";
@@ -9,22 +10,32 @@ _web_logger = None;  # logger de conteúdo web (console JS, CORS, etc.) — seta
 
 
 class _StreamToLogger:
+    # stdout/stderr são globais e recebem print() de threads fora da UI
+    # (ThreadPoolExecutor dos updaters, workers do QThreadPool); o lock protege
+    # o buffer contra corrida e mantém cada linha logada inteira.
     def __init__(self, logger: logging.Logger, level: int):
         self._logger = logger;
         self._level = level;
         self._buf = "";
+        self._lock = threading.Lock();
 
     def write(self, msg: str):
-        self._buf += msg;
-        while "\n" in self._buf:
-            line, self._buf = self._buf.split("\n", 1);
-            if line.rstrip():
-                self._logger.log(self._level, line.rstrip());
+        with self._lock:
+            self._buf += msg;
+            lines = [];
+            while "\n" in self._buf:
+                line, self._buf = self._buf.split("\n", 1);
+                if line.rstrip():
+                    lines.append(line.rstrip());
+        for line in lines:
+            self._logger.log(self._level, line);
 
     def flush(self):
-        if self._buf.rstrip():
-            self._logger.log(self._level, self._buf.rstrip());
+        with self._lock:
+            line = self._buf.rstrip();
             self._buf = "";
+        if line:
+            self._logger.log(self._level, line);
 
     def fileno(self):
         raise OSError("logger stream has no fileno");

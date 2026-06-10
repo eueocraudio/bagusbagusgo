@@ -25,6 +25,13 @@ class HistoryManager:
     def record(self, title: str, url: str):
         if not url or url == "about:blank":
             return;
+        # não duplica a última entrada: reload/revisita imediata da mesma URL
+        # apenas atualiza título e horário em vez de criar nova linha
+        if self._entries and self._entries[-1]["url"] == url:
+            self._entries[-1]["title"] = title or url;
+            self._entries[-1]["visited_at"] = datetime.now().isoformat(timespec="seconds");
+            self._save();
+            return;
         self._entries.append({
             "title": title or url,
             "url": url,
