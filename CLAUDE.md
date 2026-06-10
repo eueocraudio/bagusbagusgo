@@ -57,7 +57,7 @@ src/
   browser.py                — main(args): lê args, carrega .env, aplica flags Chromium/ZOOM, inicia MainWindow
   main_window.py            — MainWindow (orquestra tudo)
   utils/
-    constants.py            — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_DATA_DIR, DEFAULT_HOME_URL
+    constants.py            — APP_NAME, APP_VERSION, APP_ID, HISTORY_MAX, DEFAULT_HOME_URL
     theme.py                — DARK_STYLESHEET (dark + vermelho)
     logger.py               — setup(base_dir): logger do app (bbgo) + logger web (bbgo.web); web_logger()
     tasks.py                — run_async(fn, ...): executor sobre QThreadPool; resultado volta na thread de UI via signals
@@ -68,7 +68,6 @@ src/
     session_manager.py      — SessionManager: salva/restaura URLs das abas
     zoom_manager.py         — ZoomManager: zoom da página web por página/URL (zoom.json)
     extension_manager.py    — load_extensions(profile): carrega extensões de data/extensions/
-    request_interceptor.py  — UserAgentInterceptor (interceptor HTTP por domínio)
   privacy/
     user_agent.py           — random_user_agent(), navigator_spoof_script(ua)
     ad_blocker.py           — build_ad_block_js(): JS das listas pessoal + web
@@ -172,7 +171,6 @@ empurra trabalho bloqueante para fora dela:
 | `DARK_STYLESHEET` | Stylesheet global dark + vermelho aplicado no `QApplication` |
 | `random_user_agent()` | Lê `data/user_agents.txt` e retorna UA aleatório |
 | `navigator_spoof_script(ua)` | Gera JS que sobrescreve `navigator.*` para mascarar QtWebEngine |
-| `UserAgentInterceptor` | Intercepta requisições HTTP por domínio (extensível) |
 | `build_ad_block_js()` | Gera JS que remove elementos pelas listas pessoal/web de seletores |
 | `ads_updater.update()` / `ua_updater.update()` | Baixam/atualizam `ad_selectors_web.txt` e `user_agents.txt` |
 | `load_extensions(profile)` | Carrega extensões Chrome de `data/extensions/` via `QWebEngineExtensionManager` |

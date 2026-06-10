@@ -20,7 +20,3 @@ class SessionManager:
             return [u for u in data.get("urls", []) if u];
         except Exception:
             return [];
-
-    def clear(self):
-        if self._file.exists():
-            self._file.unlink();

@@ -55,21 +55,30 @@ class HistoryDialog(QDialog):
         today = date.today();
         yesterday = today - timedelta(days=1);
         for idx, entry in enumerate(entries):
-            visited = datetime.fromisoformat(entry["visited_at"]).date();
-            if visited == today:
-                group = "Hoje";
-            elif visited == yesterday:
-                group = "Ontem";
+            # parse defensivo: uma entrada legada/malformada não derruba o diálogo
+            try:
+                visited_dt = datetime.fromisoformat(entry["visited_at"]);
+            except (KeyError, ValueError, TypeError):
+                visited_dt = None;
+            if visited_dt is None:
+                group = "Sem data";
+                time_str = "--:--";
             else:
-                group = visited.strftime("%d/%m/%Y");
+                visited = visited_dt.date();
+                if visited == today:
+                    group = "Hoje";
+                elif visited == yesterday:
+                    group = "Ontem";
+                else:
+                    group = visited.strftime("%d/%m/%Y");
+                time_str = visited_dt.strftime("%H:%M");
             if group != last_group:
                 header = QListWidgetItem(f"  {group}");
                 header.setFlags(Qt.NoItemFlags);
                 header.setBackground(self.palette().alternateBase());
                 self.list_widget.addItem(header);
                 last_group = group;
-            visited_dt = datetime.fromisoformat(entry["visited_at"]);
-            item = QListWidgetItem(f"  {visited_dt.strftime('%H:%M')}  {entry['title']}  —  {entry['url']}");
+            item = QListWidgetItem(f"  {time_str}  {entry['title']}  —  {entry['url']}");
             item.setData(Qt.UserRole, (entry["visited_at"], entry["url"]));
             self.list_widget.addItem(item);
 

@@ -178,4 +178,6 @@ class DownloadPanel(QDockWidget):
                 self._items.remove(item);
                 item.setParent(None);
                 item.deleteLater();
-        self.hide();
+        # só fecha o painel se não sobrou nenhum download (ativos continuam visíveis)
+        if not self._items:
+            self.hide();
