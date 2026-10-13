@@ -18,7 +18,13 @@ from .history.history_dialog import HistoryDialog;
 from .downloads.download_panel import DownloadPanel;
 from .core.click_capture import ClickCapture, CLICK_LISTENER_JS;
 from .core.browser_tab import BrowserTab;
-from .privacy.user_agent import random_user_agent, navigator_spoof_script;
+from .privacy.user_agent import (
+    random_user_agent, navigator_spoof_script,
+    consistent_user_agent, engine_full_version, ACCEPT_LANGUAGE,
+);
+from .privacy import client_hints as _client_hints;
+from .privacy.chrome_object import CHROME_OBJECT_JS;
+from .privacy import widevine as _widevine;
 from .core.session_manager import SessionManager;
 from .core.zoom_manager import ZoomManager, DEFAULT_ZOOM, ZOOM_STEP;
 from .privacy.ad_blocker import build_ad_block_js;
@@ -85,10 +91,42 @@ class MainWindow(QMainWindow):
     def _connect_downloads(self):
         profile = self._profile;
         load_extensions(profile);
-        ua = random_user_agent();
+        # UA do próprio motor, lido antes de qualquer override — base dos Client Hints
+        engine_ua = profile.httpUserAgent();
+        if get_bool("UA_ENGINE_MATCH", default=True):
+            ua = consistent_user_agent(engine_ua);
+            _client_hints.apply(profile.clientHints(), engine_full_version(engine_ua));
+            # o QtWebEngine não manda Accept-Language nenhum; sem isso o header contradiz
+            # o navigator.languages do spoof
+            profile.setHttpAcceptLanguage(ACCEPT_LANGUAGE);
+            # o QtWebEngine cria window.chrome vazio; o Chrome real tem app/csi/loadTimes
+            chrome_obj = QWebEngineScript();
+            chrome_obj.setName("chrome_object");
+            chrome_obj.setSourceCode(CHROME_OBJECT_JS);
+            chrome_obj.setInjectionPoint(QWebEngineScript.InjectionPoint.DocumentCreation);
+            chrome_obj.setWorldId(QWebEngineScript.ScriptWorldId.MainWorld);
+            profile.scripts().insert(chrome_obj);
+            ativo = _widevine.cdm_ativo();
+            if ativo:
+                print(f"[{APP_ID}] Widevine ativo: {ativo}");
+            else:
+                fonte = _widevine.cdm_disponivel();
+                extra = f" — há um em {fonte} (ligue por symlink, ver README)" if fonte else "";
+                print(f"[{APP_ID}] Widevine ausente: sem DRM e um Chrome sem Widevine é anomalia{extra}");
+            print(f"[{APP_ID}] user-agent coerente com o motor (UA_ENGINE_MATCH=true)");
+        else:
+            ua = random_user_agent();
+            print(f"[{APP_ID}] user-agent sorteado da lista (UA_ENGINE_MATCH=false) — "
+                  f"sites que conferem Client Hints podem recusar o login");
         if ua:
             profile.setHttpUserAgent(ua);
             print(f"[bagusbagusgo] user-agent: {ua}");
+        # O spoof de `navigator` só entra no modo antigo. Com UA_ENGINE_MATCH=true ele é
+        # contraproducente: o motor já reporta UA, languages, platform, vendor,
+        # `webdriver: false` e `window.chrome` corretos, e o patch deixa 10 propriedades
+        # PRÓPRIAS em `navigator` (o Chrome real não tem nenhuma) além de um `plugins`
+        # falso que não é `PluginArray` — ou seja, denuncia mais do que esconde.
+        if ua and not get_bool("UA_ENGINE_MATCH", default=True):
             spoof_script = QWebEngineScript();
             spoof_script.setName("navigator_spoof");
             spoof_script.setSourceCode(navigator_spoof_script(ua));

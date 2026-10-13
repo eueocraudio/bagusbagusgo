@@ -20,7 +20,7 @@ _DEFAULTS: dict[str, bool] = {
     "HyperlinkAuditingEnabled":         False,
     "ScrollAnimatorEnabled":            False,
     "ErrorPageEnabled":                 True,
-    "PluginsEnabled":                   False,
+    "PluginsEnabled":                   True,   # popula navigator.plugins/mimeTypes (visualizador de PDF) — sem isto são vetores vazios, anomalia para um Chrome
     "FullScreenSupportEnabled":         True,
     "ScreenCaptureEnabled":             False,
     "WebGLEnabled":                     True,

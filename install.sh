@@ -2,7 +2,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_VERSION="2.0.3"
+APP_VERSION="$(python3 -c "
+import re,pathlib;
+print(re.search(r'APP_VERSION\s*=\s*\"([^\"]+)\"', pathlib.Path('$SCRIPT_DIR/src/utils/constants.py').read_text()).group(1))
+")"
 
 echo "=== BagusBagusGo v${APP_VERSION} — instalação ==="
 

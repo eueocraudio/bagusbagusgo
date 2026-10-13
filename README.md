@@ -149,19 +149,50 @@ Páginas web também em dark mode via `QWebEngineSettings.ForceDarkMode`.
 
 ---
 
-### 11. User Agent aleatório
+### 11. User Agent
 
-A cada inicialização, um User Agent é sorteado de `data/user_agents.txt`:
+Por padrão (`UA_ENGINE_MATCH=true`) o UA é o do **próprio motor**, sem o token
+`QtWebEngine/x.y.z` que o delata — o mesmo texto que o Chrome real envia nesse sistema —
+e os Client Hints (`Sec-CH-UA*`, `navigator.userAgentData`) são reescritos com as marcas do
+Chrome na versão do Chromium embutido.
+
+No mesmo pacote: o header `Accept-Language` passa a ser enviado (o QtWebEngine não mandava
+nenhum), o `Sec-CH-UA-Platform-Version` vai vazio como no Chrome real — antes vazava a versão
+do kernel da máquina para todo site — e o WebGL fica ligado.
+
+Isso é o que faz o **login do Google** funcionar: ele compara o UA com os Client Hints e os
+headers, e um UA sorteado anunciando outro motor (Firefox) ou outra versão (Chrome/148 sobre
+motor 140) é recusado com *"esse navegador ou app pode não ser seguro"*.
+
+Com `UA_ENGINE_MATCH=false` volta o sorteio de `data/user_agents.txt` a cada inicialização:
 
 ```
 [BBGo v2.1.0] user-agent: Mozilla/5.0 (X11; Linux x86_64) ...
 ```
 
-O `navigator.*`, `plugins`, `mimeTypes` e `window.chrome` são spoofados para mascarar o QtWebEngine.
+Nesse modo **não há spoof de `navigator`**: o motor já reporta tudo certo, e o patch deixaria
+10 propriedades próprias em `navigator` (o Chrome real não tem nenhuma) — mais denúncia que
+disfarce. O spoof de `navigator.*`, `plugins`, `mimeTypes` e `window.chrome` só é injetado com
+`UA_ENGINE_MATCH=false`.
 
 ---
 
-### 12. Pular propagandas no YouTube
+### 12. Widevine (vídeo com DRM)
+
+O QtWebEngine tem suporte a Widevine, mas **não embarca o CDM**. Se você tem Chrome instalado,
+ligue o dele:
+
+```bash
+mkdir -p ~/.config/chromium/WidevineCdm/_platform_specific/linux_x64
+ln -sf /opt/google/chrome/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so \
+       ~/.config/chromium/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so
+cp /opt/google/chrome/WidevineCdm/manifest.json ~/.config/chromium/WidevineCdm/
+```
+
+A inicialização passa a dizer `[BBGo] Widevine ativo: …`; sem o CDM ela avisa onde há um.
+Vídeo com DRM ainda depende de codec: este build não tem H.264, então vale para VP9/WebM.
+
+### 13. Pular propagandas no YouTube
 
 Ao acessar qualquer página do YouTube, um script roda a cada 500ms:
 - Clica automaticamente no botão "Pular" quando disponível
@@ -169,7 +200,7 @@ Ao acessar qualquer página do YouTube, um script roda a cada 500ms:
 
 ---
 
-### 13. Captura de cliques via Python
+### 14. Captura de cliques via Python
 
 Todo elemento clicado tem `tag`, `id` e `name` impressos no terminal:
 
@@ -180,7 +211,7 @@ Todo elemento clicado tem `tag`, `id` e `name` impressos no terminal:
 
 ---
 
-### 14. Injeção de JavaScript por URL
+### 15. Injeção de JavaScript por URL
 
 Em `src/main_window.py`, método `_on_load_finished`:
 
@@ -283,7 +314,6 @@ src/
     session_manager.py      — salva/restaura sessão
     zoom_manager.py         — zoom por página/URL (zoom.json)
     extension_manager.py    — carrega extensões de data/extensions/
-    request_interceptor.py  — interceptor HTTP por domínio (extensível)
   privacy/
     user_agent.py           — user agent aleatório + navigator spoof
     ad_blocker.py           — bloqueador CSS baseado em data/ad_selectors.txt
